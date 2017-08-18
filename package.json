@@ -1,0 +1,34 @@
+{
+    "name": "crypto-exchange-api",
+    "version": "0.0.1",
+    "description": "API wrapper for multiple Crypto Exchanges",
+    "author": "Evgeny Zislis <evgeny.zislis@gmail.com>",
+    "license": "MIT",
+    "scripts": {
+        "test": "mocha --compilers js:babel-core/register test/**/*.test.js"
+    },
+    "devDependencies": {
+        "babel-cli": "^6.24.1",
+        "babel-core": "^6.24.1",
+        "babel-plugin-transform-runtime": "^6.23.0",
+        "babel-preset-env": "^1.6.0",
+        "babel-preset-flow": "^6.23.0",
+        "eslint": "^4.4.1",
+        "flow-bin": "^0.53.1",
+        "mocha": "^3.5.0",
+        "nock": "^9.0.14",
+        "proxyquire": "^1.8.0",
+        "sinon": "^3.2.1"
+    },
+    "babel": {
+        "presets": [
+            [
+                "env",
+                "flow"
+            ]
+        ],
+        "plugins": [
+            "transform-runtime"
+        ]
+    }
+}
