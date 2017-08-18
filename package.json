@@ -23,8 +23,10 @@
     "babel": {
         "presets": [
             [
-                "env",
                 "flow"
+            ],
+            [
+                "env"
             ]
         ],
         "plugins": [

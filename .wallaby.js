@@ -7,10 +7,7 @@ module.exports = function(wallaby) {
             type: 'node'
         },
         compilers: {
-            '**/*.js': wallaby.compilers.babel({
-              presets: [ 'env', 'flow' ],
-              plugins: ['transform-runtime']
-            })
+            '**/*.js': wallaby.compilers.babel()
         }
     }
 }
