@@ -4,7 +4,7 @@ import https from 'https'
 import { URLSearchParams } from 'url'
 
 export const PUBLIC_API = 'https://poloniex.com/public'
-export const PRIVATE_API = 'https://poloniex.com/tradingApi'
+export const TRADING_API = 'https://poloniex.com/tradingApi'
 
 export class Poloniex {
   invocations: Array<number>
@@ -12,6 +12,8 @@ export class Poloniex {
   constructor() {
     this.invocations = []
   }
+
+  // Public API Methods
 
   async returnTicker() {
     return this._get({command: 'returnTicker'})
@@ -53,6 +55,12 @@ export class Poloniex {
     return this._get({ command: 'returnLoadOrders', currency: currency })
   }
 
+  // Trading API Methods
+  // async returnBalances() {
+  //   return this._post({ command 'returnBalances' })
+  // }
+
+  // Helper methods
   async _get(query?: {
     command: string,
     currencyPair?: string,

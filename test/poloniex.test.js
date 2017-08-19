@@ -4,7 +4,7 @@ import { describe, it, before, after, afterEach } from 'mocha'
 import * as sinon from 'sinon';
 import nock from 'nock'
 
-import { Poloniex, PUBLIC_API} from '../src/poloniex';
+import { Poloniex, PUBLIC_API, TRADING_API} from '../src/poloniex';
 import { URL } from 'url';
 
 process.on('unhandledRejection', (err) => {
@@ -16,6 +16,7 @@ process.on('unhandledRejection', (err) => {
 const sandbox = sinon.createSandbox();
 
 const URL_PUBLIC_API = new URL(PUBLIC_API)
+const URL_TRADING_API = new URL(TRADING_API)
 
 describe('Poloniex', () => {
   describe('#_get', () => {
@@ -83,7 +84,26 @@ describe('Poloniex', () => {
       })
     })
   })
-  describe('commands', () => {
+  describe('#_post', () => {
+    before(() => {
+      nock.disableNetConnect()
+    })
+    after(() => {
+      nock.cleanAll()
+    })
+    it('should use the correct trade api url', () => {
+      t.equal(TRADING_API, 'https://poloniex.com/tradingApi');
+    })
+    it('should sign requests')
+    it('should limit requests to a configurable limit per second')
+    it('should send a nonce on each request')
+    it('should increment the nonce on each subsequent request')
+    it('should raise an error on poloniex errors')
+    it('should raise an error on http connection errors')
+    it('should raise an error on status codes other that 2xx')
+
+  })
+  describe('public api commands', () => {
     let plx, fakeGet, startDate, endDate;
     before(() => {
       plx = new Poloniex()
@@ -216,5 +236,56 @@ describe('Poloniex', () => {
         done()
       })
     })
+  })
+  describe('trading api commands', () => {
+    let plx, fakeGet;
+    before(() => {
+      plx = new Poloniex()
+      fakeGet = sandbox.stub(plx, '_get')
+    })
+    afterEach(() => {
+      sandbox.reset();
+    })
+    it('should implement returnBalances')
+    it('should implement returnCompleteBalances')
+    it('should allow to ask for returnCompleteBalances on exchange account')
+    it('should allow to ask for returnCompleteBalances on margin account')
+    it('should allow to ask for returnCompleteBalances on lending account')
+    it('should implement returnDepositAddresses')
+    it('should implement generateNewAddress for a specified currency')
+    it('should implement returnDepositsWithdrawals between start and end unix timestamps')
+    it('should implement returnOpenOrders for all currencies')
+    it('should implement returnOpenOrders for a provided currencyPair')
+    it('should implement returnTradeHistory for a all currencies')
+    it('should implement returnTradeHistory for a provided currencyPair')
+    it('should implement returnOrderTrades for a provided orderNumber')
+    it('should implement buy for currencyPair at the rate and amount specified')
+    it('should implement sell for currencyPair at the rate and amount specified')
+    it('should implement cancelOrder for a specified orderNumber')
+    it('should implement moveOrder of a provided orderNumber to modified rate and optionally amount')
+    it('should implement withdraw for a specified currency, amount and address')
+    it('should implement withdraw optional paymentId for XMR')
+    it('should implement returnFeeInfo')
+    it('should implement returnAvailableAccountBalances')
+    it('should implement returnAvailableAccountBalances for the exchange account')
+    it('should implement returnAvailableAccountBalances for the margin account')
+    it('should implement returnAvailableAccountBalances for the lending account')
+    it('should implement returnTradableBalances')
+    it('should implement transferBalance for the specified currency, amount, toAccount and fromAccount')
+    it('should implement returnMarginAccountSummary')
+    it('should implement marginBuy for a specified currencyPair, rate and amount')
+    it('should implement marginBuy optional lendingRate parameter')
+    it('should implement marginSell for a specified currencyPair, rate and amount')
+    it('should implement marginSell optional lendingRate parameter')
+    it('should implement getMarginPosition for all currency pairs')
+    it('should implement getMarginPosition for the specified currencyPair')
+    it('should implement closeMarginPosition for a specific currencyPair')
+    it('should implement createLoanOffer for the currency, amount duration, lendingRate and autoRenew')
+    it('should implement cancelLoanOffer for a specified orderNumber')
+    it('should implement returnOpenLoadOffers')
+    it('should implement returnActiveLoans')
+    it('should implement returnLendingHistory within a time range specified by start and end')
+    it('should implement returnLendingHistory optional limit parameter')
+    it('should implement toggleAutoRenew for a specified orderNumber')
   })
 })
