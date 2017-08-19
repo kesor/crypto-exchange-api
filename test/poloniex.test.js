@@ -19,8 +19,36 @@ const URL_PUBLIC_API = new URL(PUBLIC_API)
 
 describe('Poloniex', () => {
   describe('#_get', () => {
-    before(() => { nock.disableNetConnect() })
-    after(() => { nock.cleanAll() })
+    before(() => {
+      nock.disableNetConnect()
+    })
+    after(() => {
+      nock.cleanAll()
+      sandbox.reset()
+    })
+    it('should fail when more than 6 requests per second are made', async () => {
+      let clock = sandbox.useFakeTimers(new Date())
+      let plx = new Poloniex()
+      for (let i=0; i<7; i++) {
+        try {
+          nock(URL_PUBLIC_API.origin).get(URL_PUBLIC_API.pathname).reply(200, {})
+          await plx._get()
+          clock.tick(10); // add 10ms to time
+        } catch(err) {
+          t.equal(err, 'Error: restricting requests to Poloniex to maximum of 6 per second')
+          t.equal(i, 6, 'the sixth request would fail');
+        }
+      }
+    })
+    it('should allow to request less than 6 requests per second', async () => {
+      let clock = sandbox.useFakeTimers(new Date())
+      let plx = new Poloniex()
+      for (let i=0; i<8; i++) {
+        nock(URL_PUBLIC_API.origin).get(URL_PUBLIC_API.pathname).reply(200, {})
+        await plx._get()
+        clock.tick(500); // add 0.5s to time
+      }
+    })
     it('should use the correct public api url', () => {
       t.equal(PUBLIC_API, 'https://poloniex.com/public');
     })

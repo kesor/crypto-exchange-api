@@ -7,6 +7,11 @@ export const PUBLIC_API = 'https://poloniex.com/public'
 export const PRIVATE_API = 'https://poloniex.com/tradingApi'
 
 export class Poloniex {
+  invocations: Array<number>
+
+  constructor() {
+    this.invocations = []
+  }
 
   async returnTicker() {
     return this._get({command: 'returnTicker'})
@@ -56,8 +61,19 @@ export class Poloniex {
     start?: number,
     end?: number
   }) {
+    let that = this;
     let params = query ? '?' + new URLSearchParams(query).toString() : '';
     return new Promise( (resolve, reject) => {
+
+      let ts = new Date().getTime();
+      that.invocations.push(ts);
+      that.invocations = that.invocations.filter((d) => {
+        return d > ts - 1000 // filter-out all the invocations happened more than 1s ago
+      })
+      if (this.invocations.length > 6) {
+        reject(new Error('restricting requests to Poloniex to maximum of 6 per second'))
+      }
+
       https.get(`${PUBLIC_API}${params}`, (res) => {
         if (res.statusCode < 200 || res.statusCode > 299) {
           return reject(new Error(`Failed to load page, status code: ${res.statusCode}`))
