@@ -1,11 +1,14 @@
 /* @flow */
 
+import Debug from 'debug';
 import https from 'https'
 import crypto from 'crypto'
 import { URL, URLSearchParams } from 'url'
 
 export const PUBLIC_API = 'https://poloniex.com/public'
 export const TRADING_API = 'https://poloniex.com/tradingApi'
+
+const debug = Debug('crypto-exchange-api')
 
 export class Poloniex {
   invocations: Array<number>
@@ -26,7 +29,7 @@ export class Poloniex {
     return this._get({command: 'returnTicker'})
   }
 
-  async return24Volume() {
+  async return24hVolume() {
     return this._get({command: 'return24hVolume'})
   }
 
@@ -72,10 +75,8 @@ export class Poloniex {
     command: string
   }) {
     let that = this
-    // let nonce = new Date().getTime()
     let params = query ? new URLSearchParams(query).toString() : '';
     return new Promise( (resolve, reject) => {
-
       let ts = new Date().getTime();
       that.invocations.push(ts);
       that.invocations = that.invocations.filter((d) => {
@@ -96,6 +97,7 @@ export class Poloniex {
           'User-Agent': 'github.com/kesor/crypto-exchange-api v0.0.1',
           'Content-Type': 'application/x-www-form-urlencoded',
           'Content-Length': Buffer.byteLength(postData),
+          'Nonce': +ts,
           'Key': that.key,
           'Sign': crypto.createHmac('sha512', that.secret).update(postData).digest('hex')
         }

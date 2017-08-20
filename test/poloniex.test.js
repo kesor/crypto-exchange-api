@@ -34,13 +34,13 @@ describe('Poloniex', () => {
       sandbox.reset()
     })
     it('should fail when more than 6 requests per second are made', async () => {
-      let clock = sandbox.useFakeTimers(new Date())
+      sandbox.useFakeTimers(new Date())
       for (let i=1; i<8; i++) {
         try {
           if (i<7)
             scope.reply(200, {})
           await plx._get()
-          clock.tick(10); // add 10ms to time
+          sandbox.clock.tick(10); // add 10ms to time
           t.ok(i<7, 'the 7th request must fail')
         } catch(err) {
           t.equal(err, 'Error: restricting requests to Poloniex to maximum of 6 per second')
@@ -49,39 +49,28 @@ describe('Poloniex', () => {
       }
     })
     it('should allow to request less than 6 requests per second', async () => {
-      let clock = sandbox.useFakeTimers(new Date())
+      sandbox.useFakeTimers(new Date())
       for (let i=1; i<10; i++) {
         scope.reply(200, {})
         await plx._get()
-        clock.tick(500); // add 0.5s to time
+        sandbox.clock.tick(500); // add 0.5s to time
       }
     })
     it('should use the correct public api url', () => {
       t.equal(PUBLIC_API, 'https://poloniex.com/public');
     })
-    it('should create a get request to return data', (done) => {
+    it('should create a get request to return data', async () => {
       let res = { 'hello': 'world' }
       let query = { command: 'somethingComplex' }
       scope.query(query).reply(200, res)
-      plx._get(query).then( (result) => {
-        t.deepEqual(res, result);
-        done()
-      })
+      t.deepEqual(res, await plx._get(query))
     })
-    it('should include the correct user-agent', (done) => {
-      let res = { 'hello': 'world' }
-      let query = { command: 'somethingComplex' }
-      scope = nock(URL_PUBLIC_API.origin)
+    it('should include the correct user-agent', async () => {
+      nock(URL_PUBLIC_API.origin)
         .matchHeader('User-Agent', 'github.com/kesor/crypto-exchange-api v0.0.1')
-        .replyContentLength()
         .get(URL_PUBLIC_API.pathname)
-        .query(query)
-        .reply(200, res)
-      plx._get(query).then( (result) => {
-        t.deepEqual(res, result);
-        t.equal(scope.pendingMocks().length, 0)
-        done()
-      })
+        .reply(200, {})
+      t.deepEqual({}, await plx._get())
     })
     it('should return an error on bad http status codes', (done) => {
       scope.reply(404, '{ "error": "Not found" }')
@@ -117,99 +106,75 @@ describe('Poloniex', () => {
     afterEach(() => {
       sandbox.reset();
     })
-    it('should implement returnTicker', (done) => {
+    it('should implement returnTicker', async () => {
       let res = {
         "BTC_LTC":{"last":"0.0251","lowestAsk":"0.02589999","highestBid":"0.0251","percentChange":"0.02390438","baseVolume":"6.16485315","quoteVolume":"245.82513926"},
         "BTC_NXT":{"last":"0.00005730","lowestAsk":"0.00005710","highestBid":"0.00004903","percentChange":"0.16701570","baseVolume":"0.45347489","quoteVolume":"9094"}
       }
       fakeGet.returns(res);
-      plx.returnTicker().then( (data) => {
-        t.ok(fakeGet.calledOnce)
-        t.ok(fakeGet.calledWith({ command: 'returnTicker' }))
-        t.deepEqual(data, res)
-        done()
-      })
+      t.deepEqual(res, await plx.returnTicker())
+      t.ok(fakeGet.calledOnce)
+      t.ok(fakeGet.calledWith({ command: 'returnTicker' }))
     })
-    it('should implement return24hVolume', (done) => {
+    it('should implement return24hVolume', async () => {
       let res = {"BTC_LTC":{"BTC":"2.23248854","LTC":"87.10381314"},"BTC_NXT":{"BTC":"0.981616","NXT":"14145"}, "totalBTC":"81.89657704","totalLTC":"78.52083806"};
       fakeGet.returns(res)
-      plx.return24Volume().then( (data) => {
-        t.ok(fakeGet.calledOnce)
-        t.ok(fakeGet.calledWith({ command: 'return24hVolume' }))
-        t.deepEqual(data, res)
-        done()
-      })
+      t.deepEqual(res, await plx.return24hVolume())
+      t.ok(fakeGet.calledOnce)
+      t.ok(fakeGet.calledWith({ command: 'return24hVolume' }))
     })
-    it('should implement returnOrderBook without arguments', (done) => {
+    it('should implement returnOrderBook without arguments', async () => {
       let res = {
         "BTC_NXT": { "asks":[[0.00007600,1164],[0.00007620,1300]], "bids":[[0.00006901,200],[0.00006900,408]], "isFrozen": 0, "seq": 18849},
         "BTC_XMR": { "asks":[[0.00007600,1164],[0.00007620,1300]], "bids":[[0.00006901,200],[0.00006900,408]], "isFrozen": 0, "seq": 5230},
       };
       fakeGet.returns(res)
-      plx.returnOrderBook().then( (data) => {
-        t.ok(fakeGet.calledOnce)
-        t.ok(fakeGet.calledWith({ command: 'returnOrderBook', currencyPair: 'all', depth: 10 }))
-        t.deepEqual(data, res)
-        done()
-      })
+      t.deepEqual(res, await plx.returnOrderBook())
+      t.ok(fakeGet.calledOnce)
+      t.ok(fakeGet.calledWith({ command: 'returnOrderBook', currencyPair: 'all', depth: 10 }))
     })
-    it('should implement returnOrderBook for a selected currency pair', (done) => {
+    it('should implement returnOrderBook for a selected currency pair', async () => {
       let res = {"asks":[[0.00007600,1164],[0.00007620,1300]], "bids":[[0.00006901,200],[0.00006900,408]], "isFrozen": 0, "seq": 18849};
       fakeGet.returns(res)
-      plx.returnOrderBook('BTC_ETH').then( (data) => {
-        t.ok(fakeGet.calledOnce)
-        t.ok(fakeGet.calledWith({ command: 'returnOrderBook', currencyPair: 'BTC_ETH', depth: 10 }))
-        t.deepEqual(data, res)
-        done()
-      })
+      t.deepEqual(res, await plx.returnOrderBook('BTC_ETH'))
+      t.ok(fakeGet.calledOnce)
+      t.ok(fakeGet.calledWith({ command: 'returnOrderBook', currencyPair: 'BTC_ETH', depth: 10 }))
     })
-    it('should implement returnOrderBook with a selected depth', (done) => {
+    it('should implement returnOrderBook with a selected depth', async () => {
       let res = {"asks":[[0.00007600,1164]],"bids":[[0.00006901,200]],"isFrozen":0,"seq":18849};
       fakeGet.returns(res)
-      plx.returnOrderBook('BTC_ETH', 20).then( (data) => {
-        t.ok(fakeGet.calledOnce)
-        t.ok(fakeGet.calledWith({ command: 'returnOrderBook', currencyPair: 'BTC_ETH', depth: 20 }))
-        t.deepEqual(data, res)
-        done()
-      })
+      t.deepEqual(res, await plx.returnOrderBook('BTC_ETH', 20))
+      t.ok(fakeGet.calledOnce)
+      t.ok(fakeGet.calledWith({ command: 'returnOrderBook', currencyPair: 'BTC_ETH', depth: 20 }))
     })
-    it('should implement returnTradeHistory for a selected currency pair', (done) => {
+    it('should implement returnTradeHistory for a selected currency pair', async () => {
       let res = [{"date":"2014-02-10 04:23:23","type":"buy","rate":"0.00007600","amount":"140","total":"0.01064"},{"date":"2014-02-10 01:19:37","type":"buy","rate":"0.00007600","amount":"655","total":"0.04978"} ]
       fakeGet.returns(res)
-      plx.returnTradeHistory('BTC_NXT').then( (data) => {
-        t.ok(fakeGet.calledOnce)
-        t.ok(fakeGet.calledWith({ command: 'returnTradeHistory', currencyPair: 'BTC_NXT' }))
-        t.deepEqual(data, res)
-        done()
-      })
+      t.deepEqual(res, await plx.returnTradeHistory('BTC_NXT'))
+      t.ok(fakeGet.calledOnce)
+      t.ok(fakeGet.calledWith({ command: 'returnTradeHistory', currencyPair: 'BTC_NXT' }))
     })
-    it('should implement returnTradeHistory with a selected start and/or end dates', (done) => {
+    it('should implement returnTradeHistory with a selected start and/or end dates', async () => {
       let res = [{"date":"2014-02-10 04:23:23","type":"buy","rate":"0.00007600","amount":"140","total":"0.01064"},{"date":"2014-02-10 01:19:37","type":"buy","rate":"0.00007600","amount":"655","total":"0.04978"} ]
       fakeGet.returns(res)
-      plx.returnTradeHistory('BTC_NXT', startDate, endDate).then( (data) => {
-        t.ok(fakeGet.calledOnce)
-        t.ok(fakeGet.calledWith({
-          command: 'returnTradeHistory', currencyPair: 'BTC_NXT',
-          start: Math.floor(startDate/1000), end: Math.floor(endDate/1000)
-        }))
-        t.deepEqual(data, res)
-        done()
-      })
+      t.deepEqual(res, await plx.returnTradeHistory('BTC_NXT', startDate, endDate))
+      t.ok(fakeGet.calledOnce)
+      t.ok(fakeGet.calledWith({
+        command: 'returnTradeHistory', currencyPair: 'BTC_NXT',
+        start: Math.floor(startDate/1000), end: Math.floor(endDate/1000)
+      }))
     })
-    it('should implement returnChartData with currencyPair, period start and end', (done) => {
+    it('should implement returnChartData with currencyPair, period start and end', async () => {
       let res = [{"date":1405699200,"high":0.0045388,"low":0.00403001,"open":0.00404545,"close":0.00427592,"volume":44.11655644,
       "quoteVolume":10259.29079097,"weightedAverage":0.00430015}];
       let period = 14400;
       fakeGet.returns(res)
-      plx.returnChartData('BTC_NXT', period, startDate, endDate).then( (data) => {
-        t.ok(fakeGet.calledOnce)
-        t.ok(fakeGet.calledWith({
-          command: 'returnChartData', currencyPair: 'BTC_NXT', period: period,
-          start: Math.floor(startDate/1000), end: Math.floor(endDate/1000)
-        }))
-        t.deepEqual(data, res)
-        done()
-      })
+      t.deepEqual(res, await plx.returnChartData('BTC_NXT', period, startDate, endDate))
+      t.ok(fakeGet.calledOnce)
+      t.ok(fakeGet.calledWith({
+        command: 'returnChartData', currencyPair: 'BTC_NXT', period: period,
+        start: Math.floor(startDate/1000), end: Math.floor(endDate/1000)
+      }))
     })
     it('should implement returnChartData that rejects non-valid period parameter', (done) => {
       plx.returnChartData('BTC_NXT', 666, startDate, endDate).catch( (data) => {
@@ -218,25 +183,19 @@ describe('Poloniex', () => {
         done()
       })
     })
-    it('should implement returnCurrencies', (done) => {
+    it('should implement returnCurrencies', async () => {
       let res = {"1CR":{"maxDailyWithdrawal":10000,"txFee":0.01,"minConf":3,"disabled":0},"ABY":{"maxDailyWithdrawal":10000000,"txFee":0.01,"minConf":8,"disabled":0} }
       fakeGet.returns(res)
-      plx.returnCurrencies().then( (data) => {
-        t.ok(fakeGet.calledOnce)
-        t.ok(fakeGet.calledWith({ command: 'returnCurrencies' }))
-        t.deepEqual(data, res)
-        done()
-      })
+      t.deepEqual(res, await plx.returnCurrencies())
+      t.ok(fakeGet.calledOnce)
+      t.ok(fakeGet.calledWith({ command: 'returnCurrencies' }))
     })
-    it('should implement returnLoadOrders for a given currency', (done) => {
+    it('should implement returnLoadOrders for a given currency', async () => {
       let res = {"offers":[{"rate":"0.00200000","amount":"64.66305732","rangeMin":2,"rangeMax":8} ],"demands":[{"rate":"0.00170000","amount":"26.54848841","rangeMin":2,"rangeMax":2} ]}
       fakeGet.returns(res)
-      plx.returnLoadOrders('BTC').then( (data) => {
-        t.ok(fakeGet.calledOnce)
-        t.ok(fakeGet.calledWith({ command: 'returnLoadOrders', currency: 'BTC' }))
-        t.deepEqual(data, res)
-        done()
-      })
+      t.deepEqual(res, await plx.returnLoadOrders('BTC'))
+      t.ok(fakeGet.calledOnce)
+      t.ok(fakeGet.calledWith({ command: 'returnLoadOrders', currency: 'BTC' }))
     })
   })
   describe('#_post', () => {
@@ -256,27 +215,20 @@ describe('Poloniex', () => {
     it('should use the correct trade api url', () => {
       t.equal(TRADING_API, 'https://poloniex.com/tradingApi');
     })
-    it('should create a post request to return data', (done) => {
+    it('should create a post request to return data', async () => {
       let res = { 'hello': 'world' }
       let query = { command: 'somethingComplex' }
       scope.post(pathname, query).reply(200, res)
-      plx._post(query).then( (result) => {
-        t.deepEqual(res, result);
-        done()
-      })
+      t.deepEqual(res, await plx._post(query))
     });
-    it('should sign requests', (done) => {
-      let res = { 'hello': 'world' }
+    it('should sign requests', async () => {
       let query = { command: 'complexCommand' }
       let scope = nock(URL_TRADING_API.origin)
-        .matchHeader('User-Agent', 'github.com/kesor/crypto-exchange-api v0.0.1')
         .matchHeader('Key', key)
         .matchHeader('Sign', crypto.createHmac('sha512', secret).update('command=complexCommand').digest('hex'))
-        .post(URL_TRADING_API.pathname, query).reply(200, res)
-      plx._post(query).then( (result) => {
-        t.deepEqual(res, result);
-        done()
-      })
+        .post(URL_TRADING_API.pathname, query)
+        .reply(200, {})
+      t.deepEqual({}, await plx._post(query))
     })
     it('should limit requests to a configurable limit per second', async () => {
       let clock = sandbox.useFakeTimers(new Date())
@@ -301,14 +253,19 @@ describe('Poloniex', () => {
         clock.tick(1000 / (plx.maxTrades - 1))
       }
     })
-    it('should send a nonce on each request')
-      // validate that the nonce never repeats itself ...
-      // use timestamp for nonce - but still do increment it
+    it('should send a nonce on each request', async () => {
+      sandbox.useFakeTimers(new Date())
+      scope.matchHeader('nonce', sandbox.clock.now.toString())
+        .post(pathname)
+        .reply(200, {})
+      t.deepEqual({}, await plx._post())
+    })
+    // validate that the nonce never repeats itself ...
+    // use timestamp for nonce - but still do increment it
     it('should increment the nonce on each subsequent request')
     it('should raise an error on poloniex errors')
     it('should raise an error on http connection errors')
     it('should raise an error on status codes other that 2xx')
-
   })
   describe('trading api commands', () => {
     let plx, scope, pathname
