@@ -1,16 +1,23 @@
 /* @flow */
 
 import https from 'https'
-import { URLSearchParams } from 'url'
+import crypto from 'crypto'
+import { URL, URLSearchParams } from 'url'
 
 export const PUBLIC_API = 'https://poloniex.com/public'
 export const TRADING_API = 'https://poloniex.com/tradingApi'
 
 export class Poloniex {
   invocations: Array<number>
+  key: string
+  secret: string
+  maxTrades: number
 
-  constructor() {
+  constructor(key?: string, secret?: string, maxTrades?: number) {
     this.invocations = []
+    this.key = key || ''
+    this.secret = secret || ''
+    this.maxTrades = maxTrades || 6
   }
 
   // Public API Methods
@@ -61,6 +68,41 @@ export class Poloniex {
   // }
 
   // Helper methods
+  async _post(query?: {
+    command: string
+  }) {
+    let that = this
+    // let nonce = new Date().getTime()
+    let params = query ? new URLSearchParams(query).toString() : '';
+    return new Promise( (resolve, reject) => {
+      let url = new URL(TRADING_API)
+      let postData = params
+      let req = https.request({
+        method: 'POST',
+        hostname: url.host,
+        port: 443,
+        path: url.pathname,
+        headers: {
+          'User-Agent': 'github.com/kesor/crypto-exchange-api v0.0.1',
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Content-Length': Buffer.byteLength(postData),
+          'Key': that.key,
+          'Sign': crypto.createHmac('sha512', that.secret).update(postData).digest('hex')
+        }
+      }, (res) => {
+        let rawData =''
+        res.on('data', chunk => rawData += chunk)
+        res.on('end', () => {
+          let response = JSON.parse(rawData)
+          return resolve(response);
+        })
+      })
+      req.write(postData)
+      req.end();
+    })
+
+  }
+
   async _get(query?: {
     command: string,
     currencyPair?: string,
@@ -70,6 +112,7 @@ export class Poloniex {
     end?: number
   }) {
     let that = this;
+    let url = new URL(PUBLIC_API)
     let params = query ? '?' + new URLSearchParams(query).toString() : '';
     return new Promise( (resolve, reject) => {
 
@@ -82,7 +125,14 @@ export class Poloniex {
         reject(new Error('restricting requests to Poloniex to maximum of 6 per second'))
       }
 
-      https.get(`${PUBLIC_API}${params}`, (res) => {
+      let req = https.request({
+        method: 'GET',
+        host: url.hostname,
+        path: `${url.pathname}${params}`,
+        headers: {
+          'User-Agent': 'github.com/kesor/crypto-exchange-api v0.0.1',
+        }
+      }, (res) => {
         if (res.statusCode < 200 || res.statusCode > 299) {
           return reject(new Error(`Failed to load page, status code: ${res.statusCode}`))
         }
@@ -95,7 +145,9 @@ export class Poloniex {
           }
           return resolve(response)
         });
-      }).on('error', reject)
+      })
+      req.on('error', reject)
+      req.end()
     })
   }
 

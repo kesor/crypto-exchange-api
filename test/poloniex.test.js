@@ -1,4 +1,5 @@
 /* @flow */
+
 import t from 'assert'
 import { describe, it, before, after, afterEach } from 'mocha'
 import * as sinon from 'sinon';
@@ -6,6 +7,7 @@ import nock from 'nock'
 
 import { Poloniex, PUBLIC_API, TRADING_API} from '../src/poloniex';
 import { URL } from 'url';
+import crypto from 'crypto';
 
 process.on('unhandledRejection', (err) => {
   // no unhandled promise left unturned
@@ -19,6 +21,7 @@ const URL_PUBLIC_API = new URL(PUBLIC_API)
 const URL_TRADING_API = new URL(TRADING_API)
 
 describe('Poloniex', () => {
+  it('should specify the maximum requests allowed for trading api')
   describe('#_get', () => {
     before(() => {
       nock.disableNetConnect()
@@ -62,6 +65,21 @@ describe('Poloniex', () => {
         done()
       })
     })
+    it('should include the correct user-agent', (done) => {
+      let res = { 'hello': 'world' }
+      let query = { command: 'somethingComplex' }
+      let scope = nock(URL_PUBLIC_API.origin)
+        .matchHeader('User-Agent', 'github.com/kesor/crypto-exchange-api v0.0.1')
+        .replyContentLength()
+        .get(URL_PUBLIC_API.pathname)
+        .query(query)
+        .reply(200, res)
+      new Poloniex()._get(query).then( (result) => {
+        t.deepEqual(res, result);
+        t.equal(scope.pendingMocks().length, 0)
+        done()
+      })
+    })
     it('should return an error on bad http status codes', (done) => {
       nock(URL_PUBLIC_API.origin).get(URL_PUBLIC_API.pathname).reply(404, 'Not found')
       new Poloniex()._get().catch( (result) => {
@@ -90,13 +108,78 @@ describe('Poloniex', () => {
     })
     after(() => {
       nock.cleanAll()
+      sandbox.reset()
     })
     it('should use the correct trade api url', () => {
       t.equal(TRADING_API, 'https://poloniex.com/tradingApi');
     })
-    it('should sign requests')
-    it('should limit requests to a configurable limit per second')
+    it('should create a post request to return data', (done) => {
+      let res = { 'hello': 'world' }
+      let query = { command: 'somethingComplex' }
+      let scope = nock(URL_TRADING_API.origin).post(URL_TRADING_API.pathname, query).reply(200, res)
+      new Poloniex()._post(query).then( (result) => {
+        t.deepEqual(res, result);
+        t.equal(scope.pendingMocks().length, 0)
+        done()
+      })
+    });
+    it('should sign requests', (done) => {
+      let key = 'public key'
+      let secret = 'very secret part that is private'
+      let res = { 'hello': 'world' }
+      let query = { command: 'complexCommand' }
+      let scope = nock(URL_TRADING_API.origin)
+        .matchHeader('User-Agent', 'github.com/kesor/crypto-exchange-api v0.0.1')
+        .matchHeader('Key', key)
+        .matchHeader('Sign', crypto.createHmac('sha512', secret).update('command=complexCommand').digest('hex'))
+        .post(URL_TRADING_API.pathname, query).reply(200, res)
+      new Poloniex(key, secret)._post(query).then( (result) => {
+        t.deepEqual(res, result);
+        done()
+      })
+    })
+    it('should limit requests to a configurable limit per second', async () => {
+      let clock = sandbox.useFakeTimers(new Date())
+      let plx = new Poloniex()
+      for (let i=0; i<plx.maxTrades + 1; i++) {
+        try {
+          nock(URL_TRADING_API.origin).post(URL_TRADING_API.pathname).reply(200, {})
+          await plx._post()
+          clock.tick(1); // add 1ms to time
+        } catch(err) {
+          t.equal(err, 'Error: restricting requests to Poloniex to maximum of N per second')
+          t.equal(i, plx.maxTrades, 'the next request would fail');
+        }
+      }
+    })
+    /*
+    it('should fail when more than 6 requests per second are made', async () => {
+      let clock = sandbox.useFakeTimers(new Date())
+      let plx = new Poloniex()
+      for (let i=0; i<7; i++) {
+        try {
+          nock(URL_PUBLIC_API.origin).get(URL_PUBLIC_API.pathname).reply(200, {})
+          await plx._get()
+          clock.tick(10); // add 10ms to time
+        } catch(err) {
+          t.equal(err, 'Error: restricting requests to Poloniex to maximum of 6 per second')
+          t.equal(i, 6, 'the sixth request would fail');
+        }
+      }
+    })
+    it('should allow to request less than 6 requests per second', async () => {
+      let clock = sandbox.useFakeTimers(new Date())
+      let plx = new Poloniex()
+      for (let i=0; i<8; i++) {
+        nock(URL_PUBLIC_API.origin).get(URL_PUBLIC_API.pathname).reply(200, {})
+        await plx._get()
+        clock.tick(500); // add 0.5s to time
+      }
+    })
+    */
     it('should send a nonce on each request')
+      // validate that the nonce never repeats itself ...
+      // use timestamp for nonce - but still do increment it
     it('should increment the nonce on each subsequent request')
     it('should raise an error on poloniex errors')
     it('should raise an error on http connection errors')
