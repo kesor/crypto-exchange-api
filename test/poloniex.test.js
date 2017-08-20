@@ -35,20 +35,22 @@ describe('Poloniex', () => {
     })
     it('should fail when more than 6 requests per second are made', async () => {
       let clock = sandbox.useFakeTimers(new Date())
-      for (let i=0; i<7; i++) {
+      for (let i=1; i<8; i++) {
         try {
-          scope.reply(200, {})
+          if (i<7)
+            scope.reply(200, {})
           await plx._get()
           clock.tick(10); // add 10ms to time
+          t.ok(i<7, 'the 7th request must fail')
         } catch(err) {
           t.equal(err, 'Error: restricting requests to Poloniex to maximum of 6 per second')
-          t.equal(i, 6, 'the sixth request would fail');
+          t.equal(i, 7, 'the 7th request failed')
         }
       }
     })
     it('should allow to request less than 6 requests per second', async () => {
       let clock = sandbox.useFakeTimers(new Date())
-      for (let i=0; i<8; i++) {
+      for (let i=1; i<10; i++) {
         scope.reply(200, {})
         await plx._get()
         clock.tick(500); // add 0.5s to time
@@ -82,7 +84,7 @@ describe('Poloniex', () => {
       })
     })
     it('should return an error on bad http status codes', (done) => {
-      scope.reply(404, 'Not found')
+      scope.reply(404, '{ "error": "Not found" }')
       plx._get().catch( (result) => {
         t.equal('Error: Failed to load page, status code: 404', result)
         done()
@@ -278,42 +280,27 @@ describe('Poloniex', () => {
     })
     it('should limit requests to a configurable limit per second', async () => {
       let clock = sandbox.useFakeTimers(new Date())
-      for (let i=0; i<plx.maxTrades + 1; i++) {
+      for (let i=1; i < plx.maxTrades + 2; i++) {
         try {
-          scope.post(pathname).reply(200, {})
+          if (i<plx.maxTrades + 1)
+            scope.post(pathname).reply(200, {})
           await plx._post()
-          clock.tick(1); // add 1ms to time
-        } catch(err) {
-          t.equal(err, 'Error: restricting requests to Poloniex to maximum of N per second')
-          t.equal(i, plx.maxTrades, 'the next request would fail');
+          clock.tick(10); // add 1ms to time
+          t.ok(i<plx.maxTrades + 1, 'the amount of requests is limited')
+        } catch (err) {
+          t.equal(err, `Error: restricting requests to Poloniex to maximum of ${plx.maxTrades} per second`)
+          t.equal(i, plx.maxTrades + 1, 'the last request failed')
         }
       }
     })
-    /*
-    it('should fail when more than 6 requests per second are made', async () => {
+    it('should allow to request less than the configurable amount of requests per second', async () => {
       let clock = sandbox.useFakeTimers(new Date())
-      let plx = new Poloniex()
-      for (let i=0; i<7; i++) {
-        try {
-          nock(URL_PUBLIC_API.origin).get(URL_PUBLIC_API.pathname).reply(200, {})
-          await plx._get()
-          clock.tick(10); // add 10ms to time
-        } catch(err) {
-          t.equal(err, 'Error: restricting requests to Poloniex to maximum of 6 per second')
-          t.equal(i, 6, 'the sixth request would fail');
-        }
+      for (let i = 1; i < plx.maxTrades + 4; i++) {
+        scope.post(pathname).reply(200, {})
+        await plx._post()
+        clock.tick(1000 / (plx.maxTrades - 1))
       }
     })
-    it('should allow to request less than 6 requests per second', async () => {
-      let clock = sandbox.useFakeTimers(new Date())
-      let plx = new Poloniex()
-      for (let i=0; i<8; i++) {
-        nock(URL_PUBLIC_API.origin).get(URL_PUBLIC_API.pathname).reply(200, {})
-        await plx._get()
-        clock.tick(500); // add 0.5s to time
-      }
-    })
-    */
     it('should send a nonce on each request')
       // validate that the nonce never repeats itself ...
       // use timestamp for nonce - but still do increment it

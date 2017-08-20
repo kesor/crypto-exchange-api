@@ -75,6 +75,16 @@ export class Poloniex {
     // let nonce = new Date().getTime()
     let params = query ? new URLSearchParams(query).toString() : '';
     return new Promise( (resolve, reject) => {
+
+      let ts = new Date().getTime();
+      that.invocations.push(ts);
+      that.invocations = that.invocations.filter((d) => {
+        return d > ts - 1000 // filter-out all the invocations happened more than 1s ago
+      })
+      if (that.invocations.length >= that.maxTrades + 1) {
+        return reject(new Error(`restricting requests to Poloniex to maximum of ${that.maxTrades} per second`))
+      }
+
       let url = new URL(TRADING_API)
       let postData = params
       let req = https.request({
@@ -121,8 +131,8 @@ export class Poloniex {
       that.invocations = that.invocations.filter((d) => {
         return d > ts - 1000 // filter-out all the invocations happened more than 1s ago
       })
-      if (this.invocations.length > 6) {
-        reject(new Error('restricting requests to Poloniex to maximum of 6 per second'))
+      if (that.invocations.length >= 7) {
+        return reject(new Error('restricting requests to Poloniex to maximum of 6 per second'))
       }
 
       let req = https.request({
@@ -134,7 +144,7 @@ export class Poloniex {
         }
       }, (res) => {
         if (res.statusCode < 200 || res.statusCode > 299) {
-          return reject(new Error(`Failed to load page, status code: ${res.statusCode}`))
+          reject(new Error(`Failed to load page, status code: ${res.statusCode}`))
         }
         let rawData = ''
         res.on('data', (chunk) => { rawData += chunk; });
