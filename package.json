@@ -5,16 +5,26 @@
     "author": "Evgeny Zislis <evgeny.zislis@gmail.com>",
     "license": "MIT",
     "scripts": {
-        "test": "mocha --compilers js:babel-core/register test/**/*.test.js"
+        "test": "mocha --compilers js:babel-core/register test/**/*.test.js",
+        "build": "babel -d dist/ src test",
+        "lint": "eslint src test"
     },
     "devDependencies": {
         "babel-cli": "^6.26.0",
         "babel-core": "^6.26.0",
+        "babel-eslint": "^7.2.3",
         "babel-plugin-transform-class-properties": "^6.24.1",
+        "babel-plugin-transform-flow-strip-types": "^6.22.0",
         "babel-plugin-transform-runtime": "^6.23.0",
         "babel-preset-env": "^1.6.0",
         "babel-preset-flow": "^6.23.0",
         "eslint": "^4.5.0",
+        "eslint-config-standard": "^10.2.1",
+        "eslint-plugin-flowtype": "^2.35.0",
+        "eslint-plugin-import": "^2.7.0",
+        "eslint-plugin-node": "^5.1.1",
+        "eslint-plugin-promise": "^3.5.0",
+        "eslint-plugin-standard": "^3.0.1",
         "flow-bin": "^0.53.1",
         "mocha": "^3.5.0",
         "nock": "^9.0.14",
@@ -22,17 +32,16 @@
         "sinon": "^3.2.1"
     },
     "babel": {
+        "retainLines": true,
         "presets": [
-            [
-                "flow"
-            ],
-            [
-                "env"
-            ]
+            "flow",
+            "env"
         ],
         "plugins": [
             "transform-runtime",
-            "transform-class-properties"
+            "transform-class-properties",
+            "transform-flow-strip-types",
+            "transform-strict-mode"
         ]
     }
 }

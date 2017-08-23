@@ -1,6 +1,6 @@
 {
   "flow.useNPMPackagedFlow": true,
   "flow.enabled": true,
-  "eslint.enable": false,
+  "eslint.enable": true,
   "javascript.validate.enable": false
 }
