@@ -51,7 +51,7 @@ export class Poloniex {
    * await plx.returnTicker()
    * // => {"BTC_LTC":{"last":"0.0251","lowestAsk":"0.02589999","highestBid":"0.0251","percentChange":"0.02390438", "baseVolume":"6.16485315","quoteVolume":"245.82513926"},"BTC_NXT":{"last":"0.00005730","lowestAsk":"0.00005710", "highestBid":"0.00004903","percentChange":"0.16701570","baseVolume":"0.45347489","quoteVolume":"9094"}, ... }
    */
-  async returnTicker () {
+  returnTicker () {
     return this._get({ command: 'returnTicker' })
   }
 
@@ -66,7 +66,7 @@ export class Poloniex {
    * await plx.return24hVolume()
    * // => {"BTC_LTC":{"BTC":"2.23248854","LTC":"87.10381314"},"BTC_NXT":{"BTC":"0.981616","NXT":"14145"}, ... "totalBTC":"81.89657704","totalLTC":"78.52083806"}
    */
-  async return24hVolume () {
+  return24hVolume () {
     return this._get({ command: 'return24hVolume' })
   }
 
@@ -88,7 +88,7 @@ export class Poloniex {
    * await plx.returnOrderBook() // `all` markets
    * // => {"BTC_NXT":{"asks":[[0.00007600,1164],[0.00007620,1300], ... ], "bids":[[0.00006901,200],[0.00006900,408], ... ], "isFrozen": 0, "seq": 149},"BTC_XMR":...}
    */
-  async returnOrderBook (currencyPair?: string, depth?: number) {
+  returnOrderBook (currencyPair?: string, depth?: number) {
     return this._get({ command: 'returnOrderBook', currencyPair: currencyPair || 'all', depth: depth || 10 })
   }
 
@@ -109,7 +109,7 @@ export class Poloniex {
    * // => [{"date":"2014-02-10 04:23:23","type":"buy","rate":"0.00007600","amount":"140","total":"0.01064"},{"date":"2014-02-10 01:19:37","type":"buy","rate":"0.00007600","amount":"655","total":"0.04978"}, ... ]
    * let plxPrivate = new Poloniex(key, secret)
    */
-  async returnTradeHistory (personal: boolean, currencyPair: string, startDate?: Date, endDate?: Date) {
+  returnTradeHistory (personal: boolean, currencyPair: string, startDate?: Date, endDate?: Date) {
     let req: {
       command: string, currencyPair?: string, start?: string, end?: string
     } = { command: 'returnTradeHistory', currencyPair: currencyPair }
@@ -159,7 +159,7 @@ export class Poloniex {
    * await plx.returnCurrencies()
    * // => {"1CR":{"maxDailyWithdrawal":10000,"txFee":0.01,"minConf":3,"disabled":0},"ABY":{"maxDailyWithdrawal":10000000,"txFee":0.01,"minConf":8,"disabled":0}, ... }
    */
-  async returnCurrencies () {
+  returnCurrencies () {
     return this._get({ command: 'returnCurrencies' })
   }
 
@@ -177,7 +177,7 @@ export class Poloniex {
    * await plx.returnCurrencies()
    * // => {"1CR":{"maxDailyWithdrawal":10000,"txFee":0.01,"minConf":3,"disabled":0},"ABY":{"maxDailyWithdrawal":10000000,"txFee":0.01,"minConf":8,"disabled":0}, ... }
    */
-  async returnLoanOrders (currency?: string) {
+  returnLoanOrders (currency?: string) {
     return this._get({ command: 'returnLoanOrders', currency: currency })
   }
 
@@ -193,7 +193,7 @@ export class Poloniex {
    * await plx.returnBalances()
    * // => {"BTC":"0.59098578","LTC":"3.31117268", ... }
    */
-  async returnBalances () {
+  returnBalances () {
     return this._post({ command: 'returnBalances' })
   }
 
@@ -214,7 +214,7 @@ export class Poloniex {
    * await plx.returnCompleteBalances(true)
    * // => {"exchange":{"LTC":{"available":"5.015","onOrders":"1.0025","btcValue":"0.078"},"NXT:{...} ... }, "margin": {...}, "lending": {...}}
    */
-  async returnCompleteBalances (all?: boolean) {
+  returnCompleteBalances (all?: boolean) {
     let req: { command: string, account?: string } = { command: 'returnCompleteBalances' }
     if (all) {
       Object.assign(req, { 'account': 'all' })
@@ -232,7 +232,7 @@ export class Poloniex {
    * await plx.returnDepositAddresses()
    * // => {"BTC":"19YqztHmspv2egyD6jQM3yn81x5t5krVdJ","LTC":"LPgf9kjv9H1Vuh4XSaKhzBe8JHdou1WgUB", ... "ITC":"Press Generate.." ... }
    */
-  async returnDepositAddresses () {
+  returnDepositAddresses () {
     return this._post({ command: 'returnDepositAddresses' })
   }
 
@@ -247,7 +247,7 @@ export class Poloniex {
    * await plx.generateNewAddress('BTC')
    * // => {"success":1,"response":"CKXbbs8FAVbtEa397gJHSutmrdrBrhUMxe"}
    */
-  async generateNewAddress (currency: string) {
+  generateNewAddress (currency: string) {
     return this._post({ command: 'generateNewAddress', currency: currency })
   }
 
@@ -265,7 +265,7 @@ export class Poloniex {
    * // => {"deposits":[{"currency":"BTC","address":"...","amount":"0.01006132","confirmations":10,"txid":"17f819a91369a9ff6c4a34216d434597cfc1b4a3d0489b46bd6f924137a47701","timestamp":1399305798,"status":"COMPLETE"},{"currency":"BTC","address":"...","amount":"0.00404104","confirmations":10,"txid":"7acb90965b252e55a894b535ef0b0b65f45821f2899e4a379d3e43799604695c","timestamp":1399245916,"status":"COMPLETE"}],"withdrawals":[{"withdrawalNumber":134933,"currency":"BTC","address":"1N2i5n8DwTGzUq2Vmn9TUL8J1vdr1XBDFg","amount":"5.00010000","timestamp":1399267904,"status":"COMPLETE: 36e483efa6aff9fd53a235177579d98451c4eb237c210e66cd2b9a2d4a988f8e","ipAddress":"..."}]}
    *
    */
-  async returnDepositsWithdrawals (startDate: Date, endDate: Date) {
+  returnDepositsWithdrawals (startDate: Date, endDate: Date) {
     return this._post({
       command: 'returnDepositsWithdrawals',
       start: Math.floor(startDate / 1000).toString(),
@@ -289,7 +289,7 @@ export class Poloniex {
    * await plx.returnOpenOrders()
    * // => {"BTC_1CR":[],"BTC_AC":[{"orderNumber":"120466","type":"sell","rate":"0.025","amount":"100","total":"2.5"},{"orderNumber":"120467","type":"sell","rate":"0.04","amount":"100","total":"4"}], ... }
    */
-  async returnOpenOrders (currencyPair: 'all' | string) {
+  returnOpenOrders (currencyPair: 'all' | string) {
     return this._post({
       command: 'returnOpenOrders',
       currencyPair: currencyPair
@@ -310,7 +310,7 @@ export class Poloniex {
    * await plx.returnOrderTrades(1204660)
    * // => [{"globalTradeID": 20825863, "tradeID": 147142, "currencyPair": "BTC_XVC", "type": "buy", "rate": "0.00018500", "amount": "455.34206390", "total": "0.08423828", "fee": "0.00200000", "date": "2016-03-14 01:04:36"}, ...]
    */
-  async returnOrderTrades (orderNumber: number) {
+  returnOrderTrades (orderNumber: number) {
     return this._post({
       command: 'returnOrderTrades',
       orderNumber: orderNumber.toString()
@@ -348,7 +348,7 @@ export class Poloniex {
    * await plx.buy('BTC_ETH', 0.079, 20, 'postOnly')
    * // => {"orderNumber":31226040,"resultingTrades":[{"amount":"338.8732","date":"2014-10-18 23:03:21","rate":"0.00000173","total":"0.00058625","tradeID":"16164","type":"buy"}]}
    */
-  async buy (currencyPair: string, rate: number, amount: number, type?: 'fillOrKill' | 'immediateOrCancel' | 'postOnly') {
+  buy (currencyPair: string, rate: number, amount: number, type?: 'fillOrKill' | 'immediateOrCancel' | 'postOnly') {
     let req : {
       command: string, currencyPair: string, rate: string, amount: string, [string]: string
     } = {
@@ -396,7 +396,7 @@ export class Poloniex {
    * await plx.sell('BTC_ETH', 0.079, 20, 'postOnly')
    * // => {"orderNumber":31226040,"resultingTrades":[{"amount":"338.8732","date":"2014-10-18 23:03:21","rate":"0.00000173","total":"0.00058625","tradeID":"16164","type":"buy"}]}
    */
-  async sell (currencyPair: string, rate: number, amount: number, type?: 'fillOrKill' | 'immediateOrCancel' | 'postOnly') {
+  sell (currencyPair: string, rate: number, amount: number, type?: 'fillOrKill' | 'immediateOrCancel' | 'postOnly') {
     let req : {
       command: string, currencyPair: string, rate: string, amount: string, [string]: string
     } = {
@@ -423,7 +423,7 @@ export class Poloniex {
    * await plx.cancelOrder(31226040)
    * // => {"success":1}
    */
-  async cancelOrder (orderNumber: number) {
+  cancelOrder (orderNumber: number) {
     return this._post({
       command: 'cancelOrder',
       orderNumber: orderNumber.toString()
@@ -451,7 +451,7 @@ export class Poloniex {
    * await plx.moveOrder(31226040, 0.079, 20, 'postOnly')
    * // => {"success":1,"orderNumber":"239574176","resultingTrades":{"BTC_BTS":[]}}
    */
-  async moveOrder (orderNumber: number, rate: number, amount?: number, type?: 'postOnly' | 'immediateOrCancel') {
+  moveOrder (orderNumber: number, rate: number, amount?: number, type?: 'postOnly' | 'immediateOrCancel') {
     let req: {
       command: string,
       orderNumber: string,
@@ -490,7 +490,7 @@ export class Poloniex {
    * await plx.withdraw('BTC', 1.2, '18Npsu6qDjyD46S87DPU8YvAk1MWW6puBu')
    * // => {"response":"Withdrew 1.2 BTC."}
    */
-  async withdraw (currency: string, amount: number, address: string, paymentId?: string) {
+  withdraw (currency: string, amount: number, address: string, paymentId?: string) {
     let req: {
       command: string,
       currency: string,
@@ -521,7 +521,7 @@ export class Poloniex {
    * await plx.returnFeeInfo()
    * // => {"makerFee": "0.00140000", "takerFee": "0.00240000", "thirtyDayVolume": "612.00248891", "nextTier": "1200.00000000"}
    */
-  async returnFeeInfo () {
+  returnFeeInfo () {
     return this._post({ command: 'returnFeeInfo' })
   }
 
@@ -542,7 +542,7 @@ export class Poloniex {
    * await plx.returnAvailableAccountBalances('exchange')
    * // => {"BTC":"1.19042859","BTM":"386.52379392","CHA":"0.50000000","DASH":"120.00000000","STR":"3205.32958001", "VNL":"9673.22570147"}
    */
-  async returnAvailableAccountBalances (account?: string) {
+  returnAvailableAccountBalances (account?: string) {
     let req: {
       command: string, account?: string
     } = { command: 'returnAvailableAccountBalances' }
@@ -564,7 +564,7 @@ export class Poloniex {
    * await plx.returnTradableBalances()
    * // => {"BTC_DASH":{"BTC":"8.50274777","DASH":"654.05752077"},"BTC_LTC":{"BTC":"8.50274777","LTC":"1214.67825290"},"BTC_XMR":{"BTC":"8.50274777","XMR":"3696.84685650"}}
    */
-  async returnTradableBalances () {
+  returnTradableBalances () {
     return this._post({ command: 'returnTradableBalances' })
   }
 
@@ -584,7 +584,7 @@ export class Poloniex {
    * await plx.transferBalance('BTC', 2, 'exchange', 'margin')
    * // => {"success":1,"message":"Transferred 2 BTC from exchange to margin account."}
    */
-  async transferBalance (currency: string, amount: number, fromAccount: 'exchange'|'margin'|'lending', toAccount: 'exchange'|'margin'|'lending') {
+  transferBalance (currency: string, amount: number, fromAccount: 'exchange'|'margin'|'lending', toAccount: 'exchange'|'margin'|'lending') {
     return this._post({
       command: 'transferBalance',
       currency: currency,
@@ -606,7 +606,7 @@ export class Poloniex {
    * await plx.returnMarginAccountSummary()
    * // => {"totalValue": "0.00346561","pl": "-0.00001220","lendingFees": "0.00000000","netValue": "0.00345341","totalBorrowedValue": "0.00123220","currentMargin": "2.80263755"}
    */
-  async returnMarginAccountSummary () {
+  returnMarginAccountSummary () {
     return this._post({ command: 'returnMarginAccountSummary' })
   }
 
@@ -628,7 +628,7 @@ export class Poloniex {
    * await plx.marginBuy('BTC_DASH', 0.01383692, 1)
    * // => {"success":1,"message":"Margin order placed.","orderNumber":"154407998","resultingTrades":{"BTC_DASH":[{"amount":"1.00000000","date":"2015-05-10 22:47:05","rate":"0.01383692","total":"0.01383692","tradeID":"1213556","type":"buy"}]}}
    */
-  async marginBuy (currencyPair: string, rate: number, amount: number, lendingRate?: number) {
+  marginBuy (currencyPair: string, rate: number, amount: number, lendingRate?: number) {
     let req: {
       command: string,
       rate: string,
@@ -663,7 +663,7 @@ export class Poloniex {
    * await plx.marginSell('BTC_DASH', 0.01383692, 1)
    * // => {"success":1,"message":"Margin order placed.","orderNumber":"154407998","resultingTrades":{"BTC_DASH":[{"amount":"1.00000000","date":"2015-05-10 22:47:05","rate":"0.01383692","total":"0.01383692","tradeID":"1213556","type":"sell"}]}}
    */
-  async marginSell (currencyPair: string, rate: number, amount: number, lendingRate?: number) {
+  marginSell (currencyPair: string, rate: number, amount: number, lendingRate?: number) {
     let req: {
       command: string,
       rate: string,
@@ -698,7 +698,7 @@ export class Poloniex {
    * await plx.getMarginPosition('BTC_NXT')
    * // => {"amount":"40.94717831","total":"-0.09671314",""basePrice":"0.00236190","liquidationPrice":-1,"pl":"-0.00058655", "lendingFees":"-0.00000038","type":"long"}
    */
-  async getMarginPosition (currencyPair?: string|'all') {
+  getMarginPosition (currencyPair?: string|'all') {
     return this._post({ command: 'getMarginPosition', currencyPair: currencyPair || 'all' })
   }
 
@@ -715,7 +715,7 @@ export class Poloniex {
    * await plx.closeMarginPosition('BTC_XMR')
    * // => {"success":1,"message":"Successfully closed margin position.","resultingTrades":{"BTC_XMR":[{"amount":"7.09215901","date":"2015-05-10 22:38:49","rate":"0.00235337","total":"0.01669047","tradeID":"1213346","type":"sell"},{"amount":"24.00289920","date":"2015-05-10 22:38:49","rate":"0.00235321","total":"0.05648386","tradeID":"1213347","type":"sell"}]}}
    */
-  async closeMarginPosition (currencyPair: string) {
+  closeMarginPosition (currencyPair: string) {
     return this._post({ command: 'closeMarginPosition', currencyPair: currencyPair })
   }
 
@@ -735,7 +735,7 @@ export class Poloniex {
    * await plx.createLoanOffer('BTC', 2, 0.02, false, 2)
    * // => {"success":1,"message":"Loan order placed.","orderID":10590}
    */
-  async createLoanOffer (currency: string, amount: number, rate: number, autoRenew: boolean, duration: number) {
+  createLoanOffer (currency: string, amount: number, rate: number, autoRenew: boolean, duration: number) {
     return this._post({
       command: 'createLoanOffer',
       currency: currency,
@@ -757,7 +757,7 @@ export class Poloniex {
    * await plx.cancelLoanOffer(10590)
    * // => {"success":1,"message":"Loan order placed.","orderID":10590}
    */
-  async cancelLoanOffer (orderNumber: number) {
+  cancelLoanOffer (orderNumber: number) {
     return this._post({ command: 'cancelLoanOffer', orderNumber: orderNumber.toString() })
   }
 
@@ -771,7 +771,7 @@ export class Poloniex {
    * await plx.returnOpenLoanOffers()
    * // => {"BTC":[{"id":10595,"rate":"0.00020000","amount":"3.00000000","duration":2,"autoRenew":1,"date":"2015-05-10 23:33:50"}],"LTC":[{"id":10598,"rate":"0.00002100","amount":"10.00000000","duration":2,"autoRenew":1,"date":"2015-05-10 23:34:35"}]}
    */
-  async returnOpenLoanOffers () {
+  returnOpenLoanOffers () {
     return this._post({ command: 'returnOpenLoanOffers' })
   }
 
@@ -785,7 +785,7 @@ export class Poloniex {
    * await plx.returnActiveLoans()
    * // => {"provided":[{"id":75073,"currency":"LTC","rate":"0.00020000","amount":"0.72234880","range":2,"autoRenew":0,"date":"2015-05-10 23:45:05","fees":"0.00006000"},{"id":74961,"currency":"LTC","rate":"0.00002000","amount":"4.43860711","range":2,"autoRenew":0,"date":"2015-05-10 23:45:05","fees":"0.00006000"}],"used":[{"id":75238,"currency":"BTC","rate":"0.00020000","amount":"0.04843834","range":2,"date":"2015-05-10 23:51:12","fees":"-0.00000001"}]}
    */
-  async returnActiveLoans () {
+  returnActiveLoans () {
     return this._post({ command: 'returnActiveLoans' })
   }
 
@@ -804,7 +804,7 @@ export class Poloniex {
    * await plx.returnLendingHistory(new Date() - 3600, new Date())
    * // => [{ "id": 175589553, "currency": "BTC", "rate": "0.00057400", "amount": "0.04374404", "duration": "0.47610000", "interest": "0.00001196", "fee": "-0.00000179", "earned": "0.00001017", "open": "2016-09-28 06:47:26", "close": "2016-09-28 18:13:03" }]
    */
-  async returnLendingHistory (startDate: Date, endDate: Date, limit?: number) {
+  returnLendingHistory (startDate: Date, endDate: Date, limit?: number) {
     let req: {
       command: string,
       start: string,
@@ -833,13 +833,13 @@ export class Poloniex {
    * await plx.toggleAutoRenew(10590)0
    * // => {"success":1,"message":0}
    */
-  async toggleAutoRenew (orderNumber: number) {
+  toggleAutoRenew (orderNumber: number) {
     return this._post({ command: 'toggleAutoRenew', orderNumber: orderNumber.toString() })
   }
 
   // Helper methods
 
-  async _checkRateLimit (ts: number, limit: number, rates: Array<number>) {
+  _checkRateLimit (ts: number, limit: number, rates: Array<number>) {
     rates.push(ts)
     rates = rates.filter((d: number) => {
       return d > ts - 1000 // filter-out all the invocations happened more than 1s ago
@@ -926,7 +926,9 @@ export class Poloniex {
       throw new Error(`restricting requests to Poloniex to maximum of ${this.tradingRate} per second`)
     }
     let url: URL = new URL(TRADING_API)
-    let body: string = querystring.stringify(query)
+    // unique nonce ever increasing never decreasing
+    let nonce: number = (ts * 100 - 1) + this._tradingRateCount.filter((d: number) => ts === d).length
+    let body: string = querystring.stringify(Object.assign({ nonce: nonce }, query))
     const options = {
       method: 'POST',
       host: url.hostname,
@@ -935,8 +937,6 @@ export class Poloniex {
         'User-Agent': 'github.com/kesor/crypto-exchange-api v0.0.1',
         'Content-Type': 'application/x-www-form-urlencoded',
         'Content-Length': Buffer.byteLength(body),
-        // unique nonce ever increasing never decreasing
-        'Nonce': (ts * 100 - 1) + this._tradingRateCount.filter((d: number) => ts === d).length,
         'Key': this.key,
         'Sign': crypto.createHmac('sha512', this.secret || '').update(body).digest('hex')
       }

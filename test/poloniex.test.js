@@ -8,6 +8,7 @@ import nock from 'nock'
 import { Poloniex, PUBLIC_API, TRADING_API } from '../src/poloniex'
 import { URL } from 'url'
 import crypto from 'crypto'
+import querystring from 'querystring'
 
 process.on('unhandledRejection', (err) => {
   console.error(err) // eslint-disable-line no-console
@@ -208,7 +209,7 @@ describe('Poloniex', () => {
     })
   })
   describe('#_post', () => {
-    let plx, scope, pathname, query
+    let plx, scope, pathname, query, queryNonce
     let key = 'public key'
     let secret = 'very secret part that is private'
     beforeEach(() => {
@@ -216,7 +217,9 @@ describe('Poloniex', () => {
       plx = new Poloniex(key, secret)
       pathname = URL_TRADING_API.pathname
       scope = nock(URL_TRADING_API.origin)
+      sandbox.useFakeTimers(new Date())
       query = { command: 'illegal' }
+      queryNonce = Object.assign({ nonce: sandbox.clock.now * 100 }, query)
     })
     afterEach(() => {
       nock.cleanAll()
@@ -227,26 +230,27 @@ describe('Poloniex', () => {
     })
     it('should create a post request to return data', async () => {
       let res = { 'hello': 'world' }
-      let query = { command: 'somethingComplex' }
-      scope.post(pathname, query).reply(200, res)
+      scope.post(pathname, queryNonce).reply(200, res)
       t.deepEqual(res, await plx._post(query))
     })
     it('should sign requests', async () => {
-      let query = { command: 'complexCommand' }
+      let signature = crypto
+        .createHmac('sha512', secret)
+        .update(querystring.stringify(queryNonce))
+        .digest('hex')
       nock(URL_TRADING_API.origin)
         .matchHeader('Key', key)
-        .matchHeader('Sign', crypto.createHmac('sha512', secret).update('command=complexCommand').digest('hex'))
-        .post(URL_TRADING_API.pathname, query)
+        .matchHeader('Sign', signature)
+        .post(URL_TRADING_API.pathname, queryNonce)
         .reply(200, {})
       t.deepEqual({}, await plx._post(query))
     })
     it('should limit requests to a configurable limit per second', async () => {
-      let clock = sandbox.useFakeTimers(new Date())
       for (let i = 1; i < plx.tradingRate + 2; i++) {
         try {
-          if (i < plx.tradingRate + 1) { scope.post(pathname).reply(200, {}) }
+          if (i < plx.tradingRate + 1) { scope.post(pathname,queryNonce).reply(200, {}) }
           await plx._post(query)
-          clock.tick(10) // add 1ms to time
+          sandbox.clock.tick(10) // add 1ms to time
           t.ok(i < plx.tradingRate + 1, 'the amount of requests is limited')
         } catch (err) {
           t.equal(err, `Error: restricting requests to Poloniex to maximum of ${plx.tradingRate} per second`)
@@ -255,50 +259,48 @@ describe('Poloniex', () => {
       }
     })
     it('should allow to request less than the configurable amount of requests per second', async () => {
-      let clock = sandbox.useFakeTimers(new Date())
       for (let i = 1; i < plx.tradingRate + 4; i++) {
-        scope.post(pathname).reply(200, {})
+        scope.post(pathname, queryNonce).reply(200, {})
         await plx._post(query)
-        clock.tick(1000 / (plx.tradingRate - 1))
+        sandbox.clock.tick(1000 / (plx.tradingRate - 1))
       }
     })
     it('should send a nonce on each request', async () => {
-      sandbox.useFakeTimers(new Date())
-      scope.matchHeader('nonce', (sandbox.clock.now * 100).toString())
-        .post(pathname)
+      scope
+        .post(pathname, queryNonce)
         .reply(200, {})
       t.deepEqual({}, await plx._post(query))
     })
     it('should never repeat the same nonce twice', async () => {
-      sandbox.useFakeTimers(new Date())
-      scope.post(pathname).matchHeader('nonce', (sandbox.clock.now * 100).toString()).reply(200, {})
-      scope.post(pathname).matchHeader('nonce', (sandbox.clock.now * 100 + 1).toString()).reply(200, {})
+      scope.post(pathname, Object.assign({ nonce: (sandbox.clock.now * 100) }, query)).reply(200, {})
+      scope.post(pathname, Object.assign({ nonce: (sandbox.clock.now * 100 + 1) }, query)).reply(200, {})
       await plx._post(query)
       await plx._post(query)
     })
-    it('should raise an error on poloniex errors', (done) => {
-      scope.post(pathname).reply(200, { error: 'poloniex has problems' })
-      plx._post(query).catch((result) => {
-        t.equal('Error: HTTP 200 Returned error: poloniex has problems', result)
-        done()
-      })
+    it('should raise an error on poloniex errors', async () => {
+      scope.post(pathname, queryNonce).reply(200, { error: 'poloniex has problems' })
+      await plx._post(query)
+      // .catch((result) => {
+      //   t.equal('Error: HTTP 200 Returned error: poloniex has problems', result)
+      //   done()
+      // })
     })
     it('should raise an error on http connection errors', (done) => {
-      scope.post(pathname).replyWithError('request error')
+      scope.post(pathname, queryNonce).replyWithError('request error')
       plx._post(query).catch((result) => {
         t.equal('Error: request error', result)
         done()
       })
     })
     it('should raise an error on status codes other that 2xx with JSON response', (done) => {
-      scope.post(pathname).reply(404, '{ "error": "Not found" }')
+      scope.post(pathname, queryNonce).reply(404, '{ "error": "Not found" }')
       plx._post(query).catch((result) => {
         t.equal('Error: HTTP 404 Returned error: Not found', result) // Failed to load page, status code: 404', result)
         done()
       })
     })
     it('should raise an error on status codes other that 2xx with non-JSON response', (done) => {
-      scope.post(pathname).reply(404, 'Not found')
+      scope.post(pathname, queryNonce).reply(404, 'Not found')
       plx._post(query).catch((result) => {
         t.equal(result, 'Error: HTTP 404 Returned error: Not found') // Failed to load page, status code: 404', result)
         done()
