@@ -71,7 +71,7 @@ describe('Poloniex', () => {
       t.deepEqual({}, await plx._get(query))
     })
     it('should return an error on bad http status codes', (done) => {
-      scope.reply(404, "{ 'error': 'Not found' }")
+      scope.reply(404, '{ "error": "Not found" }')
       plx._get(query).catch((result) => {
         t.equal('Error: Failed to load page, status code: 404', result)
         done()
@@ -186,11 +186,11 @@ describe('Poloniex', () => {
       t.deepEqual(res, await plx.returnCurrencies())
       t.ok(fakeGet.calledWith({ command: 'returnCurrencies' }))
     })
-    it('should implement returnLoadOrders for a given currency', async () => {
+    it('should implement returnLoanOrders for a given currency', async () => {
       let res = { 'offers': [{ 'rate': '0.00200000', 'amount': '64.66305732', 'rangeMin': 2, 'rangeMax': 8 }], 'demands': [{ 'rate': '0.00170000', 'amount': '26.54848841', 'rangeMin': 2, 'rangeMax': 2 }] }
       fakeGet.returns(res)
-      t.deepEqual(res, await plx.returnLoadOrders('BTC'))
-      t.ok(fakeGet.calledWith({ command: 'returnLoadOrders', currency: 'BTC' }))
+      t.deepEqual(res, await plx.returnLoanOrders('BTC'))
+      t.ok(fakeGet.calledWith({ command: 'returnLoanOrders', currency: 'BTC' }))
     })
   })
   describe('public api commands - do not call ._get()', () => {
@@ -279,7 +279,7 @@ describe('Poloniex', () => {
     it('should raise an error on poloniex errors', (done) => {
       scope.post(pathname).reply(200, { error: 'poloniex has problems' })
       plx._post(query).catch((result) => {
-        t.equal('Error: Poloniex failure: poloniex has problems', result)
+        t.equal('Error: Poloniex failure, status code: 200: poloniex has problems', result)
         done()
       })
     })
@@ -290,10 +290,17 @@ describe('Poloniex', () => {
         done()
       })
     })
-    it('should raise an error on status codes other that 2xx', (done) => {
-      scope.post(pathname).reply(404, "{ 'error': 'Not found' }")
+    it('should raise an error on status codes other that 2xx with JSON response', (done) => {
+      scope.post(pathname).reply(404, '{ "error": "Not found" }')
       plx._post(query).catch((result) => {
-        t.equal('Error: Failed to load page, status code: 404', result)
+        t.equal('Error: Poloniex failure, status code: 404: Not found', result) // Failed to load page, status code: 404', result)
+        done()
+      })
+    })
+    it('should raise an error on status codes other that 2xx with non-JSON response', (done) => {
+      scope.post(pathname).reply(404, 'Not found')
+      plx._post(query).catch((result) => {
+        t.equal('Error: Failed to load page, status code: 404: Not found', result) // Failed to load page, status code: 404', result)
         done()
       })
     })
@@ -406,7 +413,7 @@ describe('Poloniex', () => {
       t.ok(fakePost.calledWith({ 'command': 'returnTradeHistory', 'currencyPair': 'BTC_XCP' }))
     })
     it('should implement returnTradeHistory with a startDate parameter', async () => {
-      let res = [{ 'globalTradeID': 25129732, 'tradeID': '6325758', 'date': '2016-04-05 08:08:40', 'rate': '0.02565498', 'amount': '0.10000000', 'total': '0.00256549', 'fee': '0.00200000', 'orderNumber': '34225313575', 'type': 'sell', 'category': 'exchange' }, { 'globalTradeID': 25129628, 'tradeID': '6325741', 'date': '2016-04-05 08:07:55', 'rate': '0.02565499', 'amount': '0.10000000', 'total': '0.00256549', 'fee': '0.00200000', 'orderNumber': '34225195693', 'type': 'buy', 'category': 'exchange' }]
+      let res = [ { globalTradeID: 25129732, tradeID: '6325758', date: '2016-04-05 08:08:40', rate: '0.02565498', amount: '0.10000000', total: '0.00256549', fee: '0.00200000', orderNumber: '34225313575', type: 'sell', category: 'exchange' }, { globalTradeID: 25129628, tradeID: '6325741', date: '2016-04-05 08:07:55', rate: '0.02565499', amount: '0.10000000', total: '0.00256549', fee: '0.00200000', orderNumber: '34225195693', type: 'buy', category: 'exchange' } ]
       fakePost.returns(res)
       t.deepEqual(res, await plx.returnTradeHistory(true, 'BTC_XCP', startDate))
       t.ok(fakePost.calledWith({
@@ -416,29 +423,7 @@ describe('Poloniex', () => {
       }))
     })
     it('should implement returnTradeHistory with a startDate and endDate parameters', async () => {
-      let res = [{
-        'globalTradeID': 25129732,
-        'tradeID': '6325758',
-        'date': '2016-04-05 08:08:40',
-        'rate': '0.02565498',
-        'amount': '0.10000000',
-        'total': '0.00256549',
-        'fee': '0.00200000',
-        'orderNumber': '34225313575',
-        'type': 'sell',
-        'category': 'exchange'
-      }, {
-        'globalTradeID': 25129628,
-        'tradeID': '6325741',
-        'date': '2016-04-05 08:07:55',
-        'rate': '0.02565499',
-        'amount': '0.10000000',
-        'total': '0.00256549',
-        'fee': '0.00200000',
-        'orderNumber': '34225195693',
-        'type': 'buy',
-        'category': 'exchange'
-      }]
+      let res = [ { globalTradeID: 25129732, tradeID: '6325758', date: '2016-04-05 08:08:40', rate: '0.02565498', amount: '0.10000000', total: '0.00256549', fee: '0.00200000', orderNumber: '34225313575', type: 'sell', category: 'exchange' }, { globalTradeID: 25129628, tradeID: '6325741', date: '2016-04-05 08:07:55', rate: '0.02565499', amount: '0.10000000', total: '0.00256549', fee: '0.00200000', orderNumber: '34225195693', type: 'buy', category: 'exchange' } ]
       fakePost.returns(res)
       t.deepEqual(res, await plx.returnTradeHistory(true, 'BTC_XCP', startDate, endDate))
       t.ok(fakePost.calledWith({
@@ -449,17 +434,7 @@ describe('Poloniex', () => {
       }))
     })
     it('should implement returnOrderTrades for a provided orderNumber', async () => {
-      let res = [{
-        'globalTradeID': 20825863,
-        'tradeID': 147142,
-        'currencyPair': 'BTC_XVC',
-        'type': 'buy',
-        'rate': '0.00018500',
-        'amount': '455.34206390',
-        'total': '0.08423828',
-        'fee': '0.00200000',
-        'date': '2016-03-14 01:04:36'
-      }]
+      let res = [ { globalTradeID: 20825863, tradeID: 147142, currencyPair: 'BTC_XVC', type: 'buy', rate: '0.00018500', amount: '455.34206390', total: '0.08423828', fee: '0.00200000', date: '2016-03-14 01:04:36' } ]
       fakePost.returns(res)
       t.deepEqual(res, await plx.returnOrderTrades(120466))
       t.ok(fakePost.calledWith({
@@ -468,45 +443,97 @@ describe('Poloniex', () => {
       }))
     })
     it('should implement buy for currencyPair at the rate and amount specified', async () => {
-      let res = {
-        'orderNumber': 31226040,
-        'resultingTrades': [{
-          'amount': '338.8732',
-          'date': '2014-10-18 23: 03:21',
-          'rate': '0.00000173',
-          'total': '0.00058625',
-          'tradeID': '16164',
-          'type': 'buy'
-        }]
-      }
+      let res = { orderNumber: 31226040, resultingTrades: [ { amount: '338.8732', date: '2014-10-18 23: 03:21', rate: '0.00000173', total: '0.00058625', tradeID: '16164', type: 'buy' } ] }
       fakePost.returns(res)
-      t.deepEqual(res, await plx.buy('BTCETH', 0.000002, 338.8732))
+      t.deepEqual(res, await plx.buy('BTC_ETH', 0.000002, 338.8732))
       t.ok(fakePost.calledWith({
         command: 'buy',
-        currencyPair: 'BTCETH',
+        currencyPair: 'BTC_ETH',
         rate: '0.00000200',
         amount: '338.87320000'
       }))
     })
-    it('should implement sell for currencyPair at the rate and amount specified', async () => {
-      let res = {
-        'orderNumber': 31226040,
-        'resultingTrades': [{
-          'amount': '338.8732',
-          'date': '2014-10-18 23:03:21',
-          'rate': '0.00000173',
-          'total': '0.00058625',
-          'tradeID': '16164',
-          'type': 'sell'
-        }]
-      }
+    it('should implement buy optional type to fillOrKill', async () => {
+      let res = { orderNumber: 31226040, resultingTrades: [ { amount: '338.8732', date: '2014-10-18 23: 03:21', rate: '0.00000173', total: '0.00058625', tradeID: '16164', type: 'buy' } ] }
       fakePost.returns(res)
-      t.deepEqual(res, await plx.sell('BTCETH', 0.000001, 338.8732))
+      t.deepEqual(res, await plx.buy('BTC_ETH', 0.000002, 338.8732, 'fillOrKill'))
+      t.ok(fakePost.calledWith({
+        command: 'buy',
+        currencyPair: 'BTC_ETH',
+        rate: '0.00000200',
+        amount: '338.87320000',
+        fillOrKill: '1'
+      }))
+    })
+    it('should implement buy optional type to immediateOrCancel', async () => {
+      let res = { orderNumber: 31226040, resultingTrades: [ { amount: '338.8732', date: '2014-10-18 23: 03:21', rate: '0.00000173', total: '0.00058625', tradeID: '16164', type: 'buy' } ] }
+      fakePost.returns(res)
+      t.deepEqual(res, await plx.buy('BTC_ETH', 0.000002, 338.8732, 'immediateOrCancel'))
+      t.ok(fakePost.calledWith({
+        command: 'buy',
+        currencyPair: 'BTC_ETH',
+        rate: '0.00000200',
+        amount: '338.87320000',
+        immediateOrCancel: '1'
+      }))
+    })
+    it('should implement buy optional type to postOnly', async () => {
+      let res = { orderNumber: 31226040, resultingTrades: [ { amount: '338.8732', date: '2014-10-18 23: 03:21', rate: '0.00000173', total: '0.00058625', tradeID: '16164', type: 'buy' } ] }
+      fakePost.returns(res)
+      t.deepEqual(res, await plx.buy('BTC_ETH', 0.000002, 338.8732, 'postOnly'))
+      t.ok(fakePost.calledWith({
+        command: 'buy',
+        currencyPair: 'BTC_ETH',
+        rate: '0.00000200',
+        amount: '338.87320000',
+        postOnly: '1'
+      }))
+    })
+    it('should implement sell for currencyPair at the rate and amount specified', async () => {
+      let res = { orderNumber: 31226040, resultingTrades: [ { amount: '338.8732', date: '2014-10-18 23: 03:21', rate: '0.00000173', total: '0.00058625', tradeID: '16164', type: 'buy' } ] }
+      fakePost.returns(res)
+      t.deepEqual(res, await plx.sell('BTC_ETH', 0.000001, 338.8732))
       t.ok(fakePost.calledWith({
         command: 'sell',
-        currencyPair: 'BTCETH',
+        currencyPair: 'BTC_ETH',
         rate: '0.00000100',
         amount: '338.87320000'
+      }))
+    })
+    it('should implement sell optional type to fillOrKill', async () => {
+      let res = { orderNumber: 31226040, resultingTrades: [ { amount: '338.8732', date: '2014-10-18 23: 03:21', rate: '0.00000173', total: '0.00058625', tradeID: '16164', type: 'buy' } ] }
+      fakePost.returns(res)
+      t.deepEqual(res, await plx.sell('BTC_ETH', 0.000001, 338.8732, 'fillOrKill'))
+      t.ok(fakePost.calledWith({
+        command: 'sell',
+        currencyPair: 'BTC_ETH',
+        rate: '0.00000100',
+        amount: '338.87320000',
+        fillOrKill: '1'
+      }))
+    })
+    it('should implement sell optional type to immediateOrCancel', async () => {
+      let res = { orderNumber: 31226040, resultingTrades: [ { amount: '338.8732', date: '2014-10-18 23: 03:21', rate: '0.00000173', total: '0.00058625', tradeID: '16164', type: 'buy' } ] }
+      fakePost.returns(res)
+      t.deepEqual(res, await plx.sell('BTC_ETH', 0.000001, 338.8732, 'immediateOrCancel'))
+      t.ok(fakePost.calledWith({
+        command: 'sell',
+        currencyPair: 'BTC_ETH',
+        rate: '0.00000100',
+        amount: '338.87320000',
+        immediateOrCancel: '1'
+      }))
+    })
+    it('should implement sell optional type to postOnly', async () => {
+      let res = { orderNumber: 31226040, resultingTrades: [ { amount: '338.8732', date: '2014-10-18 23: 03:21', rate: '0.00000173', total: '0.00058625', tradeID: '16164', type: 'buy' } ] }
+      fakePost.returns(res)
+      t.deepEqual(res, await plx.sell('BTC_ETH', 0.000001, 338.8732, 'postOnly'))
+      t.ok(fakePost.calledWith({
+        command: 'sell',
+        currencyPair: 'BTC_ETH',
+        rate: '0.00000100',
+        amount: '338.87320000',
+        postOnly: '1'
       }))
     })
     it('should implement cancelOrder for a specified orderNumber', async () => {
@@ -516,7 +543,7 @@ describe('Poloniex', () => {
       t.ok(fakePost.calledWith({ command: 'cancelOrder', orderNumber: '120466' }))
     })
     it('should implement moveOrder of a provided orderNumber to modified rate', async () => {
-      let res = { 'success': 1, 'orderNumber': '239574176', 'resultingTrades': { 'BTC_BTS': [] } }
+      let res = { success: 1, orderNumber: '239574176', resultingTrades: { BTC_BTS: [] } }
       fakePost.returns(res)
       t.deepEqual(res, await plx.moveOrder(239574176, 0.00000100))
       t.ok(fakePost.calledWith({
@@ -526,7 +553,7 @@ describe('Poloniex', () => {
       }))
     })
     it('should implement moveOrder of a provided orderNumber to modified rate and amount', async () => {
-      let res = { 'success': 1, 'orderNumber': '239574176', 'resultingTrades': { 'BTC_BTS': [] } }
+      let res = { success: 1, orderNumber: '239574176', resultingTrades: { BTC_BTS: [] } }
       fakePost.returns(res)
       t.deepEqual(res, await plx.moveOrder(239574176, 0.00000100, 338.8732))
       t.ok(fakePost.calledWith({
@@ -534,6 +561,30 @@ describe('Poloniex', () => {
         orderNumber: '239574176',
         rate: '0.00000100',
         amount: '338.87320000'
+      }))
+    })
+    it('should implement moveOrder with optional type of postOnly', async () => {
+      let res = { success: 1, orderNumber: '239574176', resultingTrades: { BTC_BTS: [] } }
+      fakePost.returns(res)
+      t.deepEqual(res, await plx.moveOrder(239574176, 0.00000100, 338.8732, 'postOnly'))
+      t.ok(fakePost.calledWith({
+        command: 'moveOrder',
+        orderNumber: '239574176',
+        rate: '0.00000100',
+        amount: '338.87320000',
+        postOnly: '1'
+      }))
+    })
+    it('should implement moveOrder with optional type of immediateOrCancel', async () => {
+      let res = { success: 1, orderNumber: '239574176', resultingTrades: { BTC_BTS: [] } }
+      fakePost.returns(res)
+      t.deepEqual(res, await plx.moveOrder(239574176, 0.00000100, 338.8732, 'immediateOrCancel'))
+      t.ok(fakePost.calledWith({
+        command: 'moveOrder',
+        orderNumber: '239574176',
+        rate: '0.00000100',
+        amount: '338.87320000',
+        immediateOrCancel: '1'
       }))
     })
     it('should implement withdraw for a specified currency, amount and address', async () => {

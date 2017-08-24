@@ -8,14 +8,22 @@
       "script": "test"
     },
     {
-        "type": "npm",
-        "script": "lint",
-        "presentation": {
-          "reveal": "never"
-        },
-        "problemMatcher": [
-            "$eslint-stylish"
-        ]
+      "type": "npm",
+      "script": "lint",
+      "presentation": {
+        "reveal": "never"
+      },
+      "problemMatcher": [
+        "$eslint-stylish"
+      ]
+    },
+    {
+      "type": "npm",
+      "script": "doc",
+      "presentation": {
+        "reveal": "never"
+      },
+      "problemMatcher": []
     }
   ]
 }

@@ -7,7 +7,8 @@
     "scripts": {
         "test": "mocha --compilers js:babel-core/register test/**/*.test.js",
         "build": "babel -d dist/ src test",
-        "lint": "eslint src test"
+        "lint": "eslint src test",
+        "doc": "documentation build src/** -f html -o dist/doc"
     },
     "devDependencies": {
         "babel-cli": "^6.26.0",
@@ -18,6 +19,7 @@
         "babel-plugin-transform-runtime": "^6.23.0",
         "babel-preset-env": "^1.6.0",
         "babel-preset-flow": "^6.23.0",
+        "documentation": "^5.2.2",
         "eslint": "^4.5.0",
         "eslint-config-standard": "^10.2.1",
         "eslint-plugin-flowtype": "^2.35.0",

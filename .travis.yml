@@ -5,6 +5,7 @@ node_js:
 script:
   - yarn lint
   - yarn flow
+  - yarn doc
   - yarn build
   - yarn test
 
