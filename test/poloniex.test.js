@@ -58,7 +58,7 @@ describe('Poloniex', () => {
       t.equal(PUBLIC_API, 'https://poloniex.com/public')
     })
     it('should create a get request to return data', async () => {
-      let res = { 'hello': 'world' }
+      let res = { hello: 'world' }
       scope.reply(200, res)
       t.deepEqual(res, await plx._get(query))
     })
@@ -73,7 +73,7 @@ describe('Poloniex', () => {
     it('should return an error on bad http status codes', (done) => {
       scope.reply(404, '{ "error": "Not found" }')
       plx._get(query).catch((result) => {
-        t.equal('Error: Failed to load page, status code: 404', result)
+        t.equal('Error: HTTP 404 Returned error: Not found', result)
         done()
       })
     })
@@ -87,7 +87,7 @@ describe('Poloniex', () => {
     it('should return an error on errors from poloniex', (done) => {
       scope.reply(200, { error: 'poloniex has problems' })
       plx._get(query).catch((result) => {
-        t.equal('Error: Poloniex failure: poloniex has problems', result)
+        t.equal('Error: HTTP 200 Returned error: poloniex has problems', result)
         done()
       })
     })
@@ -242,24 +242,24 @@ describe('Poloniex', () => {
     })
     it('should limit requests to a configurable limit per second', async () => {
       let clock = sandbox.useFakeTimers(new Date())
-      for (let i = 1; i < plx.maxTrades + 2; i++) {
+      for (let i = 1; i < plx.tradingRate + 2; i++) {
         try {
-          if (i < plx.maxTrades + 1) { scope.post(pathname).reply(200, {}) }
+          if (i < plx.tradingRate + 1) { scope.post(pathname).reply(200, {}) }
           await plx._post(query)
           clock.tick(10) // add 1ms to time
-          t.ok(i < plx.maxTrades + 1, 'the amount of requests is limited')
+          t.ok(i < plx.tradingRate + 1, 'the amount of requests is limited')
         } catch (err) {
-          t.equal(err, `Error: restricting requests to Poloniex to maximum of ${plx.maxTrades} per second`)
-          t.equal(i, plx.maxTrades + 1, 'the last request failed')
+          t.equal(err, `Error: restricting requests to Poloniex to maximum of ${plx.tradingRate} per second`)
+          t.equal(i, plx.tradingRate + 1, 'the last request failed')
         }
       }
     })
     it('should allow to request less than the configurable amount of requests per second', async () => {
       let clock = sandbox.useFakeTimers(new Date())
-      for (let i = 1; i < plx.maxTrades + 4; i++) {
+      for (let i = 1; i < plx.tradingRate + 4; i++) {
         scope.post(pathname).reply(200, {})
         await plx._post(query)
-        clock.tick(1000 / (plx.maxTrades - 1))
+        clock.tick(1000 / (plx.tradingRate - 1))
       }
     })
     it('should send a nonce on each request', async () => {
@@ -279,7 +279,7 @@ describe('Poloniex', () => {
     it('should raise an error on poloniex errors', (done) => {
       scope.post(pathname).reply(200, { error: 'poloniex has problems' })
       plx._post(query).catch((result) => {
-        t.equal('Error: Poloniex failure, status code: 200: poloniex has problems', result)
+        t.equal('Error: HTTP 200 Returned error: poloniex has problems', result)
         done()
       })
     })
@@ -293,14 +293,14 @@ describe('Poloniex', () => {
     it('should raise an error on status codes other that 2xx with JSON response', (done) => {
       scope.post(pathname).reply(404, '{ "error": "Not found" }')
       plx._post(query).catch((result) => {
-        t.equal('Error: Poloniex failure, status code: 404: Not found', result) // Failed to load page, status code: 404', result)
+        t.equal('Error: HTTP 404 Returned error: Not found', result) // Failed to load page, status code: 404', result)
         done()
       })
     })
     it('should raise an error on status codes other that 2xx with non-JSON response', (done) => {
       scope.post(pathname).reply(404, 'Not found')
       plx._post(query).catch((result) => {
-        t.equal('Error: Failed to load page, status code: 404: Not found', result) // Failed to load page, status code: 404', result)
+        t.equal(result, 'Error: HTTP 404 Returned error: Not found') // Failed to load page, status code: 404', result)
         done()
       })
     })

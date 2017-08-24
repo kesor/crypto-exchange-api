@@ -19,21 +19,23 @@ export const TRADING_API: string = 'https://poloniex.com/tradingApi'
  *
  * @param {string} [key] your API key
  * @param {string} [secret] your API key secret
- * @param {number} [maxTrades=6] rate limit for trading API
+ * @param {number} [tradingRate=6] rate limit for trading API
  * @param {number} [precision=8] precision for sent prices and amounts
  */
 export class Poloniex {
-  invocations: Array<number>
+  _publicRateCount: Array<number>
+  _tradingRateCount: Array<number>
   key: string | void
   secret: string | void
-  maxTrades: number
+  tradingRate: number
   precision: number
 
-  constructor (key?: string, secret?: string, maxTrades?: number, precision?: number) {
-    this.invocations = []
+  constructor (key?: string, secret?: string, tradingRate?: number, precision?: number) {
+    this._publicRateCount = []
+    this._tradingRateCount = []
     this.key = key
     this.secret = secret
-    this.maxTrades = maxTrades || 6
+    this.tradingRate = tradingRate || 6
     this.precision = precision || 8
   }
 
@@ -837,72 +839,47 @@ export class Poloniex {
 
   // Helper methods
 
-  /**
-   * POST data to the Trading API endpoint
-   *
-   * @private
-   * @param {object} query command and parameters to POST to API endpoint
-   * @returns {Promise<object, Error>} API results or an error
-   */
-  async _post (query: {
-    command: string,
-    [string]: string
-  }) {
-    let that: Poloniex = this
+  async _checkRateLimit (ts: number, limit: number, rates: Array<number>) {
+    rates.push(ts)
+    rates = rates.filter((d: number) => {
+      return d > ts - 1000 // filter-out all the invocations happened more than 1s ago
+    })
+    return rates.length <= limit
+  }
 
-    let params: string = querystring.stringify(query)
+  _httpsRequest (options: {}, body?: string) {
     return new Promise((resolve, reject) => {
-      if (that.key === undefined || that.secret === undefined) {
-        return reject(new Error('Key and secret are not available for POST requests.'))
-      }
-
-      let ts: number = new Date().getTime()
-      that.invocations.push(ts)
-      that.invocations = that.invocations.filter((d: number) => {
-        return d > ts - 1000 // filter-out all the invocations happened more than 1s ago
-      })
-      let nonce: number = (ts * 100 - 1) + that.invocations.filter((d: number) => ts === d).length
-      if (that.invocations.length >= that.maxTrades + 1) {
-        return reject(new Error(`restricting requests to Poloniex to maximum of ${that.maxTrades} per second`))
-      }
-
-      let url: URL = new URL(TRADING_API)
-      let postData: string = params
-      let req: https.ClientRequest = https.request({
-        method: 'POST',
-        hostname: url.host,
-        port: 443,
-        path: url.pathname,
-        headers: {
-          'User-Agent': 'github.com/kesor/crypto-exchange-api v0.0.1',
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'Content-Length': Buffer.byteLength(postData),
-          'Nonce': nonce,
-          'Key': that.key,
-          'Sign': crypto.createHmac('sha512', that.secret || '').update(postData).digest('hex')
-        }
-      }, (res: https.IncomingMessage) => {
-        let rawData = ''
-        res.on('data', chunk => { rawData += chunk })
+      let req : https.ClientRequest = https.request(options, (res : https.IncomingMessage) => {
+        let rawData: string = ''
+        res.on('data', (chunk) => { rawData += chunk })
         res.on('end', () => {
-          try {
-            let response = JSON.parse(rawData)
-            if (response.error) {
-              return reject(new Error(`Poloniex failure, status code: ${res.statusCode}: ${response.error}`))
-            }
-            return resolve(response)
-          } catch (err) {
-            // returned response is not JSON!
-            if (res.statusCode < 200 || res.statusCode > 299) {
-              return reject(new Error(`Failed to load page, status code: ${res.statusCode}: ${rawData}`))
-            }
-          }
+          return resolve({ statusCode: res.statusCode, data: rawData })
         })
       })
-      req.write(postData)
       req.on('error', reject)
+      if (body) {
+        req.write(body)
+      }
       req.end()
     })
+  }
+
+  /**
+   * Parse https.request responses
+   *
+   * @private
+   */
+  _resParse (response : { statusCode: number, data: string }) {
+    let resObj
+    try {
+      resObj = JSON.parse(response.data)
+    } catch (e) {
+      throw new Error(`HTTP ${response.statusCode} Returned error: ${response.data}`)
+    }
+    if (resObj.error) {
+      throw new Error(`HTTP ${response.statusCode} Returned error: ${resObj.error}`)
+    }
+    return resObj
   }
 
   /**
@@ -916,47 +893,54 @@ export class Poloniex {
     command: string,
     [string]: string
   }) {
-    let that: Poloniex = this
+    let ts = new Date().getTime()
+    if (!await this._checkRateLimit(ts, 6, this._publicRateCount)) { throw new Error('restricting requests to Poloniex to maximum of 6 per second') }
     let url: URL = new URL(PUBLIC_API)
-    return new Promise((resolve, reject) => {
-      let params: string = '?' + querystring.stringify(query)
-      let ts = new Date().getTime()
-      that.invocations.push(ts)
-      that.invocations = that.invocations.filter((d: number) => {
-        return d > ts - 1000 // filter-out all the invocations happened more than 1s ago
-      })
-      if (that.invocations.length >= 7) {
-        return reject(new Error('restricting requests to Poloniex to maximum of 6 per second'))
+    const options = {
+      method: 'GET',
+      host: url.hostname,
+      path: url.pathname + '?' + querystring.stringify(query),
+      headers: {
+        'User-Agent': 'github.com/kesor/crypto-exchange-api v0.0.1'
       }
+    }
+    return this._resParse(await this._httpsRequest(options))
+  }
 
-      let req: https.ClientRequest = https.request({
-        method: 'GET',
-        host: url.hostname,
-        path: `${url.pathname}${params}`,
-        headers: {
-          'User-Agent': 'github.com/kesor/crypto-exchange-api v0.0.1'
-        }
-      }, (res: https.IncomingMessage) => {
-        if (res.statusCode < 200 || res.statusCode > 299) {
-          return reject(new Error(`Failed to load page, status code: ${res.statusCode}`))
-        }
-        let rawData: string = ''
-        res.on('data', (chunk) => { rawData += chunk })
-        res.on('end', () => {
-          let response = JSON.parse(rawData)
-          if (response.error) {
-            return reject(new Error(`Poloniex failure: ${response.error}`))
-          }
-          return resolve(response)
-        })
-      })
-      req.on('error', reject)
-      req.end()
-    })
+  /**
+   * POST data to the Trading API endpoint
+   *
+   * @private
+   * @param {object} query command and parameters to POST to API endpoint
+   * @returns {Promise<object, Error>} API results or an error
+   */
+  async _post (query: {
+    command: string,
+    [string]: string
+  }) {
+    let ts = new Date().getTime()
+    if (this.key === undefined || this.secret === undefined) {
+      throw new Error('Key and secret are not available for POST requests.')
+    }
+    if (!await this._checkRateLimit(ts, this.tradingRate, this._tradingRateCount)) {
+      throw new Error(`restricting requests to Poloniex to maximum of ${this.tradingRate} per second`)
+    }
+    let url: URL = new URL(TRADING_API)
+    let body: string = querystring.stringify(query)
+    const options = {
+      method: 'POST',
+      host: url.hostname,
+      path: url.pathname,
+      headers: {
+        'User-Agent': 'github.com/kesor/crypto-exchange-api v0.0.1',
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Length': Buffer.byteLength(body),
+        // unique nonce ever increasing never decreasing
+        'Nonce': (ts * 100 - 1) + this._tradingRateCount.filter((d: number) => ts === d).length,
+        'Key': this.key,
+        'Sign': crypto.createHmac('sha512', this.secret || '').update(body).digest('hex')
+      }
+    }
+    return this._resParse(await this._httpsRequest(options, body))
   }
 }
-
-process.on('unhandledRejection', (err) => {
-  console.error(err) // eslint-disable-line no-console
-  if (process.env.NODE_ENV !== 'production') { process.exit(1) }
-})
