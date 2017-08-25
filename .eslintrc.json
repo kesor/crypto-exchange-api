@@ -13,6 +13,7 @@
     "sourceType": "module"
   },
   "extends": [
+    "plugin:flowtype/recommended",
     "eslint:recommended",
     "standard"
   ],
