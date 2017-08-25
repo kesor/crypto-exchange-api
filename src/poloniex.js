@@ -584,7 +584,7 @@ export class Poloniex {
    * await plx.transferBalance('BTC', 2, 'exchange', 'margin')
    * // => {"success":1,"message":"Transferred 2 BTC from exchange to margin account."}
    */
-  transferBalance (currency: string, amount: number, fromAccount: 'exchange'|'margin'|'lending', toAccount: 'exchange'|'margin'|'lending') {
+  transferBalance (currency: string, amount: number, fromAccount: 'exchange' | 'margin' | 'lending', toAccount: 'exchange' | 'margin' | 'lending') {
     return this._post({
       command: 'transferBalance',
       currency: currency,
@@ -698,7 +698,7 @@ export class Poloniex {
    * await plx.getMarginPosition('BTC_NXT')
    * // => {"amount":"40.94717831","total":"-0.09671314",""basePrice":"0.00236190","liquidationPrice":-1,"pl":"-0.00058655", "lendingFees":"-0.00000038","type":"long"}
    */
-  getMarginPosition (currencyPair?: string|'all') {
+  getMarginPosition (currencyPair?: string | 'all') {
     return this._post({ command: 'getMarginPosition', currencyPair: currencyPair || 'all' })
   }
 
@@ -849,7 +849,7 @@ export class Poloniex {
 
   _httpsRequest (options: {}, body?: string) {
     return new Promise((resolve, reject) => {
-      let req : https.ClientRequest = https.request(options, (res : https.IncomingMessage) => {
+      let req : https.ClientRequest = https.request(options, (res: https.IncomingMessage) => {
         let rawData: string = ''
         res.on('data', (chunk) => { rawData += chunk })
         res.on('end', () => {
@@ -869,7 +869,7 @@ export class Poloniex {
    *
    * @private
    */
-  _resParse (response : { statusCode: number, data: string }) {
+  _resParse (response: { statusCode: number, data: string }) {
     let resObj
     try {
       resObj = JSON.parse(response.data)
