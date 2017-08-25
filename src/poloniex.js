@@ -928,7 +928,7 @@ export class Poloniex {
     let url: URL = new URL(TRADING_API)
     // unique nonce ever increasing never decreasing
     let nonce: number = (ts * 100 - 1) + this._tradingRateCount.filter((d: number) => ts === d).length
-    let body: string = querystring.stringify(Object.assign({ nonce: nonce }, query))
+    let body: string = querystring.stringify(Object.assign({}, { nonce: nonce }, query))
     const options = {
       method: 'POST',
       host: url.hostname,

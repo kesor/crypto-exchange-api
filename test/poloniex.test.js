@@ -219,7 +219,7 @@ describe('Poloniex', () => {
       scope = nock(URL_TRADING_API.origin)
       sandbox.useFakeTimers(new Date())
       query = { command: 'illegal' }
-      queryNonce = Object.assign({ nonce: sandbox.clock.now * 100 }, query)
+      queryNonce = Object.assign({}, { nonce: sandbox.clock.now * 100 }, query)
       queryNoncePost = querystring.stringify(queryNonce)
     })
     afterEach(() => {
@@ -247,7 +247,6 @@ describe('Poloniex', () => {
       t.deepEqual({}, await plx._post(query))
     })
     it('should limit requests to a configurable limit per second', async () => {
-      console.log(`tradingRate: ${plx.tradingRate + 2}`)
       for (let i = 1; i < plx.tradingRate + 2; i++) {
         try {
           if (i < plx.tradingRate + 1) {
@@ -255,7 +254,7 @@ describe('Poloniex', () => {
           }
           await plx._post(query)
           sandbox.clock.tick(10) // add 1ms to time
-          queryNonce = Object.assign({ nonce: sandbox.clock.now * 100 }, query)
+          queryNonce = Object.assign({}, { nonce: sandbox.clock.now * 100 }, query)
           queryNoncePost = querystring.stringify(queryNonce)
           t.ok(i < plx.tradingRate + 1, 'the amount of requests is limited')
         } catch (err) {
@@ -269,7 +268,7 @@ describe('Poloniex', () => {
         scope.post(pathname, queryNoncePost).reply(200, {})
         await plx._post(query)
         sandbox.clock.tick(1000 / (plx.tradingRate - 1))
-        queryNonce = Object.assign({ nonce: sandbox.clock.now * 100 }, query)
+        queryNonce = Object.assign({}, { nonce: sandbox.clock.now * 100 }, query)
         queryNoncePost = querystring.stringify(queryNonce)
       }
     })
@@ -280,8 +279,8 @@ describe('Poloniex', () => {
       t.deepEqual({}, await plx._post(query))
     })
     it('should never repeat the same nonce twice', async () => {
-      scope.post(pathname, querystring.stringify(Object.assign({ nonce: (sandbox.clock.now * 100) }, query))).reply(200, {})
-      scope.post(pathname, querystring.stringify(Object.assign({ nonce: (sandbox.clock.now * 100 + 1) }, query))).reply(200, {})
+      scope.post(pathname, querystring.stringify(Object.assign({}, { nonce: (sandbox.clock.now * 100) }, query))).reply(200, {})
+      scope.post(pathname, querystring.stringify(Object.assign({}, { nonce: (sandbox.clock.now * 100 + 1) }, query))).reply(200, {})
       await plx._post(query)
       await plx._post(query)
     })
