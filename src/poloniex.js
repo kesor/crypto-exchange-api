@@ -1,6 +1,7 @@
 /* @flow */
 
-import https from 'https'
+import { API } from './api'
+
 import crypto from 'crypto'
 import { URL } from 'url'
 import querystring from 'querystring'
@@ -22,7 +23,7 @@ export const TRADING_API: string = 'https://poloniex.com/tradingApi'
  * @param {number} [tradingRate=6] rate limit for trading API
  * @param {number} [precision=8] precision for sent prices and amounts
  */
-export class Poloniex {
+export class Poloniex extends API {
   _publicRateCount: Array<number>
   _tradingRateCount: Array<number>
   key: string | void
@@ -31,6 +32,7 @@ export class Poloniex {
   precision: number
 
   constructor (key?: string, secret?: string, tradingRate?: number, precision?: number) {
+    super()
     this._publicRateCount = []
     this._tradingRateCount = []
     this.key = key
@@ -839,49 +841,6 @@ export class Poloniex {
 
   // Helper methods
 
-  _checkRateLimit (ts: number, limit: number, rates: Array<number>) {
-    rates.push(ts)
-    rates = rates.filter((d: number) => {
-      return d > ts - 1000 // filter-out all the invocations happened more than 1s ago
-    })
-    return rates.length <= limit
-  }
-
-  _httpsRequest (options: {}, body?: string) {
-    return new Promise((resolve, reject) => {
-      let req : https.ClientRequest = https.request(options, (res: https.IncomingMessage) => {
-        let rawData: string = ''
-        res.on('data', (chunk) => { rawData += chunk })
-        res.on('end', () => {
-          return resolve({ statusCode: res.statusCode, data: rawData })
-        })
-      })
-      req.on('error', reject)
-      if (body) {
-        req.write(body)
-      }
-      req.end()
-    })
-  }
-
-  /**
-   * Parse https.request responses
-   *
-   * @private
-   */
-  _resParse (response: { statusCode: number, data: string }) {
-    let resObj
-    try {
-      resObj = JSON.parse(response.data)
-    } catch (e) {
-      throw new Error(`HTTP ${response.statusCode} Returned error: ${response.data}`)
-    }
-    if (resObj.error) {
-      throw new Error(`HTTP ${response.statusCode} Returned error: ${resObj.error}`)
-    }
-    return resObj
-  }
-
   /**
    * GET request data from the Public API endpoint
    *
@@ -904,7 +863,7 @@ export class Poloniex {
         'User-Agent': 'github.com/kesor/crypto-exchange-api v0.0.1'
       }
     }
-    return this._resParse(await this._httpsRequest(options))
+    return this._resJsonParse(await this._httpsRequest(options))
   }
 
   /**
@@ -941,6 +900,6 @@ export class Poloniex {
         'Sign': crypto.createHmac('sha512', this.secret || '').update(body).digest('hex')
       }
     }
-    return this._resParse(await this._httpsRequest(options, body))
+    return this._resJsonParse(await this._httpsRequest(options, body))
   }
 }
