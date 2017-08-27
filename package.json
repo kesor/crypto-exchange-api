@@ -1,6 +1,6 @@
 {
     "name": "crypto-exchange-api",
-    "version": "0.0.1",
+    "version": "0.1.0",
     "description": "API wrapper for multiple Crypto Exchanges",
     "author": "Evgeny Zislis <evgeny.zislis@gmail.com>",
     "license": "MIT",
@@ -11,7 +11,7 @@
         "lint": "eslint src test",
         "doc": "documentation build src/** -f html -o dist/doc",
         "prepare": "npm run -s build",
-        "prepublish": "npm test -s"
+        "prepublish": "rm -rf dist; npm test -s"
     },
     "devDependencies": {
         "babel-cli": "^6.26.0",
