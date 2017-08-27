@@ -1,0 +1,14 @@
+node_modules/
+src/
+test/
+.eslint*
+yarn*
+.yarn*
+.travis*
+.wallaby*
+.flow*
+.DS_*
+*-debug.log*
+*-error.log*
+coverage
+.nyc_output

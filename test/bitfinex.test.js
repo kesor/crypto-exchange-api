@@ -71,5 +71,29 @@ describe('BitfinexV2 API', () => {
       let actual = await bfx.tickersJSON('fUSD', 'tBTCUSD')
       t.deepEqual(actual, expected)
     })
+    it('should implement /ticker', async () => {
+      let res = [0.00084679, 0.00073, 30, 39587.73068079, 0.00077181, 2, 4803382.13433891, 0.0000918, 0.1522, 0.0006948, 79406619.25851107, 0, 0]
+      fakeGet.returns(res)
+      t.deepEqual(await bfx.ticker('fUSD'), res)
+      t.ok(fakeGet.calledWith('ticker/fUSD'))
+    })
+    it('should implement /ticker json parsing', async () => {
+      let res = [4346.3, 16.7770791, 4346.4, 12.74414776, -32.2, -0.0074, 4346.3, 26592.11456399, 4464.2, 4250]
+      let expected = {
+        bid: res[0],
+        bid_size: res[1],
+        ask: res[2],
+        ask_size: res[3],
+        daily_change: res[4],
+        daily_change_perc: res[5],
+        last_price: res[6],
+        volume: res[7],
+        high: res[8],
+        low: res[9]
+      }
+      fakeGet.returns(res)
+      let actual = await bfx.tickerJSON('tBTCUSD')
+      t.deepEqual(actual, expected)
+    })
   })
 })
