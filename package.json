@@ -10,8 +10,7 @@
         "build": "babel -d dist/ src",
         "lint": "eslint src test",
         "doc": "documentation build src/** -f html -o dist/doc",
-        "prepare": "npm run -s build",
-        "prepublish": "rm -rf dist; npm test -s"
+        "prepare": "rm -rf dist && npm test -s && npm run -s build"
     },
     "devDependencies": {
         "babel-cli": "^6.26.0",
