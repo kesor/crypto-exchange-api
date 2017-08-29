@@ -1,4 +1,5 @@
 module.exports = {
   Poloniex: require('./poloniex').Poloniex,
-  BitfinexV2: require('./bitfinex').BitfinexV2
+  Bitfinex: require('./bitfinex').Bitfinex,
+  BitfinexV2: require('./bitfinex_v2').BitfinexV2
 }
