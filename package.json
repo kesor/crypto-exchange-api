@@ -48,5 +48,8 @@
             "transform-flow-comments",
             "transform-strict-mode"
         ]
+    },
+    "dependencies": {
+        "debug": "^3.0.1"
     }
 }

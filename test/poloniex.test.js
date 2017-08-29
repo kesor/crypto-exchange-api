@@ -21,6 +21,22 @@ const URL_PUBLIC_API = new URL(PUBLIC_API)
 const URL_TRADING_API = new URL(TRADING_API)
 
 describe('Poloniex', () => {
+  describe('constructor', () => {
+    it('should set key and secret from arguments', () => {
+      let plx = new Poloniex('key', 'secret')
+      t.equal(plx.key, 'key')
+      t.equal(plx.secret, 'secret')
+    })
+    it('should set key and secret from process environment when not supplied via arguments', () => {
+      process.env.CRYPTO_POLONIEX_KEY = 'env key'
+      process.env.CRYPTO_POLONIEX_SECRET = 'env secret'
+      let plx = new Poloniex()
+      t.equal(plx.key, 'env key')
+      t.equal(plx.secret, 'env secret')
+      delete process.env.CRYPTO_POLONIEX_KEY
+      delete process.env.CRYPTO_POLONIEX_SECRET
+    })
+  })
   describe('#_get', () => {
     let plx, scope, query
     beforeEach(() => {

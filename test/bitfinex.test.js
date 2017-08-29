@@ -14,8 +14,24 @@ process.on('unhandledRejection', (err) => {
 const sandbox = sinon.createSandbox()
 
 describe('Bitfinex API', () => {
-  it('should define the API endpoint', () => {
-    t.equal(new Bitfinex().endpoint, 'https://api.bitfinex.com/v1/')
+  describe('constructor', () => {
+    it('should define the API endpoint', () => {
+      t.equal(new Bitfinex().endpoint, 'https://api.bitfinex.com/v1/')
+    })
+    it('should set key and secret from arguments', () => {
+      let bfx = new Bitfinex('key', 'secret')
+      t.equal(bfx.key, 'key')
+      t.equal(bfx.secret, 'secret')
+    })
+    it('should set key and secret from process environment when not supplied via arguments', () => {
+      process.env.CRYPTO_BITFINEX_KEY = 'env key'
+      process.env.CRYPTO_BITFINEX_SECRET = 'env secret'
+      let bfx = new Bitfinex()
+      t.equal(bfx.key, 'env key')
+      t.equal(bfx.secret, 'env secret')
+      delete process.env.CRYPTO_BITFINEX_KEY
+      delete process.env.CRYPTO_BITFINEX_SECRET
+    })
   })
   describe('public api', () => {
     let bfx, fakeGet
@@ -32,6 +48,29 @@ describe('Bitfinex API', () => {
       fakeGet.returns(res)
       t.deepEqual(await bfx.symbols(), res)
       t.ok(fakeGet.calledWithExactly('symbols'))
+    })
+  })
+  describe('private api', () => {
+    let bfx, fakePost
+    beforeEach(() => {
+      bfx = new Bitfinex()
+      fakePost = sandbox.stub(bfx, '_post')
+    })
+    afterEach(() => {
+      t.ok(fakePost.calledOnce)
+      sandbox.reset()
+    })
+    it('should implement balances', async () => {
+      let res = [{ 'type': 'deposit', 'currency': 'btc', 'amount': '0.0', 'available': '0.0'
+      }, { 'type': 'deposit', 'currency': 'usd', 'amount': '1.0', 'available': '1.0'
+      }, { 'type': 'exchange', 'currency': 'btc', 'amount': '1', 'available': '1'
+      }, { 'type': 'exchange', 'currency': 'usd', 'amount': '1', 'available': '1'
+      }, { 'type': 'trading', 'currency': 'btc', 'amount': '1', 'available': '1'
+      }, { 'type': 'trading', 'currency': 'usd', 'amount': '1', 'available': '1'
+      }]
+      fakePost.returns(res)
+      t.deepEqual(res, await bfx.balances())
+      sinon.assert.calledWithExactly(fakePost, 'balances')
     })
   })
 })

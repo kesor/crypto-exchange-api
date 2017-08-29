@@ -26,8 +26,8 @@ export const TRADING_API: string = 'https://poloniex.com/tradingApi'
 export class Poloniex extends API {
   _publicRateCount: Array<number>
   _tradingRateCount: Array<number>
-  key: string | void
-  secret: string | void
+  key: string | null | void
+  secret: string | null | void
   tradingRate: number
   precision: number
 
@@ -35,8 +35,8 @@ export class Poloniex extends API {
     super()
     this._publicRateCount = []
     this._tradingRateCount = []
-    this.key = key
-    this.secret = secret
+    this.key = key || process.env.CRYPTO_POLONIEX_KEY
+    this.secret = secret || process.env.CRYPTO_POLONIEX_SECRET
     this.tradingRate = tradingRate || 6
     this.precision = precision || 8
   }
