@@ -7,11 +7,10 @@ export class API {
    *
    * @private
    */
-  _checkRateLimit (ts: number, limit: number, rates: Array<number>) {
+  _checkRateLimit (ts: number, limit: number, rates: number[]) {
     rates.push(ts)
-    rates = rates.filter((d: number) => {
-      return d > ts - 1000 // filter-out all the invocations happened more than 1s ago
-    })
+    let edge = rates.find((d) => ts - 1000 < d)
+    if (edge) rates.splice(0, rates.indexOf(edge))
     return rates.length <= limit
   }
 
