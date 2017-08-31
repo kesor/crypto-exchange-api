@@ -6,8 +6,8 @@
     "license": "MIT",
     "main": "./dist/index.js",
     "scripts": {
-        "test": "NODE_ENV=test nyc --reporter=html --reporter=text --reporter=lcov mocha --compilers js:babel-core/register test/**/*.test.js",
-        "build": "babel -d dist/ src",
+        "test": "cross-env NODE_ENV=test nyc mocha",
+        "build": "cross-env NODE_ENV=production babel -d dist/ src",
         "lint": "eslint src test",
         "doc": "documentation build src/** -f html -o dist/doc",
         "prepare": "rm -rf dist && npm test -s && npm run -s build"
@@ -22,6 +22,7 @@
         "babel-plugin-transform-runtime": "^6.23.0",
         "babel-preset-env": "^1.6.0",
         "babel-preset-flow": "^6.23.0",
+        "cross-env": "^5.0.5",
         "documentation": "^5.2.2",
         "eslint": "^4.5.0",
         "eslint-config-standard": "^10.2.1",
@@ -36,6 +37,9 @@
         "nyc": "^11.1.0",
         "proxyquire": "^1.8.0",
         "sinon": "^3.2.1"
+    },
+    "optionalDependencies": {
+        "fsevents": "1.1.2"
     },
     "babel": {
         "sourceMaps": true,
@@ -55,10 +59,10 @@
         "debug": "^3.0.1"
     },
     "env": {
-      "test": {
-        "plugins": [
-          "istanbul"
-        ]
-      }
+        "test": {
+            "plugins": [
+                "istanbul"
+            ]
+        }
     }
 }
