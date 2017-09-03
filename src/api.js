@@ -1,5 +1,9 @@
 /* @flow */
+
 import https from 'https'
+import Debug from 'debug'
+
+const debug = Debug('crypto-exchange-api:api')
 
 export class API {
   /**
@@ -23,10 +27,13 @@ export class API {
     let resObj
     try {
       resObj = JSON.parse(response.data)
+      debug('Successful response %o', response)
     } catch (e) {
+      debug('Response error %o', response)
       throw new Error(`HTTP ${response.statusCode} Returned error: ${response.data}`)
     }
     if (resObj.error) {
+      debug('Response error %o', response)
       throw new Error(`HTTP ${response.statusCode} Returned error: ${resObj.error}`)
     }
     return resObj
@@ -39,6 +46,7 @@ export class API {
    */
   _httpsRequest (options: {}, body?: string) {
     return new Promise((resolve, reject) => {
+      debug(`sending https request with body: %o and options:\n%O`, body, options)
       let req : https.ClientRequest = https.request(options, (res: https.IncomingMessage) => {
         let rawData: string = ''
         res.on('data', (chunk) => { rawData += chunk })
