@@ -51,5 +51,8 @@ describe('API', () => {
       nock.cleanAll()
     })
     it('should be tested')
+    it('should use the same http agent for all requests')
+    // agent = new http.Agent({ keepAlive: true })
+    // http.request({ agent: agent })
   })
 })
