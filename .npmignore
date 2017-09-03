@@ -17,4 +17,4 @@ coverage
 TODO
 .npmignore
 *.tgz
-index.js
+/index.js
