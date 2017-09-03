@@ -44,7 +44,7 @@ export class API {
    *
    * @private
    */
-  _httpsRequest (options: {}, body?: string) {
+  _httpsRequest (options: {}, body?: string): Promise<*> {
     return new Promise((resolve, reject) => {
       debug(`sending https request with body: %o and options:\n%O`, body, options)
       let req : https.ClientRequest = https.request(options, (res: https.IncomingMessage) => {
