@@ -4,9 +4,10 @@ import { API } from './api'
 import { URL } from 'url'
 import crypto from 'crypto'
 import querystring from 'querystring'
-import Debug from 'debug'
+// import Debug from 'debug'
 
-const debug = Debug('crypto-exchange-api:bitfinex')
+// const debug = Debug('crypto-exchange-api:bitfinex')
+
 /**
  * Returns a client for the Bitfinex v1 REST API.
  */
@@ -42,6 +43,32 @@ export class Bitfinex extends API {
    */
   symbols (): Promise<string[]> {
     return this._get('symbols')
+  }
+
+  /**
+   * Return information about your account
+   */
+  accountInfo (): Promise<{}[]> {
+    return this._post('account_infos')
+  }
+
+  /**
+   * Return your withdrawal fees
+   */
+  accountFees (): Promise<{}[]> {
+    return this._post('account_fees')
+  }
+
+  /**
+   * Returns a 30-day summary of your trading volume and return on margin funding.
+   * @returns {Promise<{trade_vol_30d: string, funding_profit_30d: string, maker_fees: number, taker_fees: number}>}
+   * * `trade_vol_30d` - Trading volumes for any currency for the last 30 days
+   * * `funding_profit_30d` - Funding profits for any currency for the last 30 days
+   * * `maker_fees` - Your current fees for maker orders (limit orders not marketable, in percent)
+   * * `taker_fees` - Your current fees for taker orders (marketable order, in percent)
+   */
+  summary (): Promise<{trade_vol30d: string, funding_profit_30d: string, maker_fees: number, taker_fees: number}> {
+    return this._post('summary')
   }
 
   /**
@@ -104,7 +131,6 @@ export class Bitfinex extends API {
         'X-Bfx-Signature': crypto.createHmac('sha384', this.secret || '').update(payload).digest('hex')
       }
     }
-    debug(`sending https request with body: %o and options:\n%O`, body, options)
     return this._resJsonParse(await this._httpsRequest(options, body))
   }
 }

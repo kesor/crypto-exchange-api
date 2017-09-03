@@ -73,9 +73,49 @@ describe('Bitfinex API', () => {
       t.ok(fakePost.calledOnce)
       sandbox.reset()
     })
-    it('should implement account info')
-    it('should implement account fees')
-    it('should implement summary')
+    it('should implement account info', async () => {
+      let res = [{
+        maker_fees: '0.1',
+        taker_fees: '0.2',
+        fees: [
+          { pairs: 'BTC', maker_fees: '0.1', taker_fees: '0.2' },
+          { pairs: 'LTC', maker_fees: '0.1', taker_fees: '0.2' },
+          { pairs: 'ETH', maker_fees: '0.1', taker_fees: '0.2' }
+        ]
+      }]
+      fakePost.returns(res)
+      t.deepEqual(res, await bfx.accountInfo())
+      sinon.assert.calledWithExactly(fakePost, 'account_infos')
+    })
+    it('should implement account fees', async () => {
+      let res = {
+        'withdraw': { 'BTC': '0.0005', 'LTC': 0, 'ETH': 0 }
+      }
+      fakePost.returns(res)
+      t.deepEqual(res, await bfx.accountFees())
+      sinon.assert.calledWithExactly(fakePost, 'account_fees')
+    })
+    it('should implement summary', async () => {
+      let res = {
+        trade_vol_30d: [
+          { curr: 'BTC', vol: 11.88696022 },
+          { curr: 'LTC', vol: 0.0 },
+          { curr: 'ETH', vol: 0.1 },
+          { curr: 'Total (USD)', vol: 5027.63 }
+        ],
+        funding_profit_30d: [
+          { curr: 'USD', amount: 0.0 },
+          { curr: 'BTC', amount: 0.0 },
+          { curr: 'LTC', amount: 0.0 },
+          { curr: 'ETH', amount: 0.0 }
+        ],
+        maker_fee: 0.001,
+        taker_fee: 0.002
+      }
+      fakePost.returns(res)
+      t.deepEqual(res, await bfx.summary())
+      sinon.assert.calledWithExactly(fakePost, 'summary')
+    })
     it('should implement deposit')
     it('should implement key permissions')
     it('should implement margin information')
