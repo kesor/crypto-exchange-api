@@ -1,6 +1,6 @@
 {
     "name": "crypto-exchange-api",
-    "version": "0.1.4",
+    "version": "0.1.5",
     "description": "API wrapper for multiple Crypto Exchanges",
     "author": "Evgeny Zislis <evgeny.zislis@gmail.com>",
     "license": "MIT",
