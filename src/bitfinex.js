@@ -112,7 +112,7 @@ export class Bitfinex extends API {
    * @param {string} path api path
    * @param {{[string]:string}} [query] api query parameters
    */
-  async _get (path: string, query?: { [string]: string }) {
+  async _get (path: string, query?: { [string]: string | number | boolean }) {
     let qs = query ? '?' + querystring.stringify(query) : ''
     const options = {
       method: 'GET',
@@ -132,7 +132,7 @@ export class Bitfinex extends API {
    * @param {string} path api path
    * @param {{[string]:string}} [query] api query
    */
-  async _post (path: string, query?: { [string]: string }) {
+  async _post (path: string, query?: { [string]: string | number | boolean }) {
     let ts = Date.now()
     if (this.key === undefined || this.secret === undefined) {
       throw new Error('Key and secret are not available for POST requests.')
