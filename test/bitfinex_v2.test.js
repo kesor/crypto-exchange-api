@@ -14,8 +14,13 @@ process.on('unhandledRejection', (err) => {
 const sandbox = sinon.createSandbox()
 
 describe('BitfinexV2 API', () => {
-  it('should define the API endpoint', () => {
-    t.equal(new BitfinexV2().endpoint, 'https://api.bitfinex.com/v2/')
+  describe('constructor', () => {
+    it('should set the api name', () => {
+      t.equal(new BitfinexV2().name, 'bitfinex v2')
+    })
+    it('should define the API endpoint', () => {
+      t.equal(new BitfinexV2().endpoint, 'https://api.bitfinex.com/v2/')
+    })
   })
   describe('public api', () => {
     let bfx, fakeGet

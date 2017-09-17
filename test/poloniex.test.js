@@ -22,6 +22,9 @@ const URL_TRADING_API = new URL(TRADING_API)
 
 describe('Poloniex', () => {
   describe('constructor', () => {
+    it('should set the api name', () => {
+      t.equal(new Poloniex().name, 'poloniex')
+    })
     it('should set key and secret from arguments', () => {
       let plx = new Poloniex('key', 'secret')
       t.equal(plx.key, 'key')
@@ -90,7 +93,7 @@ describe('Poloniex', () => {
     it('should return an error on bad http status codes', (done) => {
       scope.reply(404, '{ "error": "Not found" }')
       plx._get(query).catch((result) => {
-        t.equal('Error: HTTP 404 Returned error: Not found', result)
+        t.equal('Error: (poloniex) HTTP 404 Returned error: Not found', result)
         done()
       })
     })
@@ -104,7 +107,7 @@ describe('Poloniex', () => {
     it('should return an error on errors from poloniex', (done) => {
       scope.reply(200, { error: 'poloniex has problems' })
       plx._get(query).catch((result) => {
-        t.equal('Error: HTTP 200 Returned error: poloniex has problems', result)
+        t.equal('Error: (poloniex) HTTP 200 Returned error: poloniex has problems', result)
         done()
       })
     })
@@ -303,7 +306,7 @@ describe('Poloniex', () => {
     it('should raise an error on poloniex errors', (done) => {
       scope.post(pathname, queryNoncePost).reply(200, { error: 'poloniex has problems' })
       plx._post(query).catch((result) => {
-        t.equal('Error: HTTP 200 Returned error: poloniex has problems', result)
+        t.equal('Error: (poloniex) HTTP 200 Returned error: poloniex has problems', result)
         done()
       })
     })
@@ -317,14 +320,14 @@ describe('Poloniex', () => {
     it('should raise an error on status codes other that 2xx with JSON response', (done) => {
       scope.post(pathname, queryNoncePost).reply(404, '{ "error": "Not found" }')
       plx._post(query).catch((result) => {
-        t.equal('Error: HTTP 404 Returned error: Not found', result) // Failed to load page, status code: 404', result)
+        t.equal('Error: (poloniex) HTTP 404 Returned error: Not found', result) // Failed to load page, status code: 404', result)
         done()
       })
     })
     it('should raise an error on status codes other that 2xx with non-JSON response', (done) => {
       scope.post(pathname, queryNoncePost).reply(404, 'Not found')
       plx._post(query).catch((result) => {
-        t.equal(result, 'Error: HTTP 404 Returned error: Not found') // Failed to load page, status code: 404', result)
+        t.equal(result, 'Error: (poloniex) HTTP 404 Returned error: Not found') // Failed to load page, status code: 404', result)
         done()
       })
     })

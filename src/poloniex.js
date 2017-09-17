@@ -39,6 +39,7 @@ export class Poloniex extends API {
     this.secret = secret || process.env.CRYPTO_POLONIEX_SECRET
     this.tradingRate = tradingRate || 6
     this.precision = precision || 8
+    this.name = 'poloniex'
   }
 
   // Public API Methods

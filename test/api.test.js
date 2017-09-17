@@ -17,6 +17,11 @@ describe('API', () => {
   afterEach(() => {
     sandbox.reset()
   })
+  describe('constructor', () => {
+    it('should set the api name', () => {
+      t.equal(api.name, 'undefined')
+    })
+  })
   describe('#_checkRateLimit', () => {
     it('should add provided timestamp to end of provided array', () => {
       let rates = [555]

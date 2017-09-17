@@ -15,6 +15,9 @@ const sandbox = sinon.createSandbox()
 
 describe('Bitfinex API', () => {
   describe('constructor', () => {
+    it('should set the api name', () => {
+      t.equal(new Bitfinex().name, 'bitfinex v1')
+    })
     it('should define the API endpoint', () => {
       t.equal(new Bitfinex().endpoint, 'https://api.bitfinex.com/v1/')
     })

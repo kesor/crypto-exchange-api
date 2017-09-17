@@ -19,6 +19,7 @@ export class BitfinexV2 extends API {
     this.endpointUrl = new URL(this.endpoint)
     this.endpointHost = this.endpointUrl.hostname
     this.endpointPath = this.endpointUrl.pathname
+    this.name = 'bitfinex v2'
   }
 
   /**

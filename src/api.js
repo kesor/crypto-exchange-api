@@ -6,6 +6,12 @@ import Debug from 'debug'
 const debug = Debug('crypto-exchange-api:api')
 
 export class API {
+  name: string
+
+  constructor () {
+    this.name = 'undefined'
+  }
+
   /**
    * Store and check per-second rate limits
    *
@@ -27,14 +33,14 @@ export class API {
     let resObj
     try {
       resObj = JSON.parse(response.data)
-      debug('Successful response %o', response)
+      debug('(%s) Successful response %o', this.name, response)
     } catch (e) {
-      debug('Response error %o', response)
-      throw new Error(`HTTP ${response.statusCode} Returned error: ${response.data}`)
+      debug('(%s) Response error %o', this.name, response)
+      throw new Error(`(${this.name}) HTTP ${response.statusCode} Returned error: ${response.data}`)
     }
     if (resObj.error) {
-      debug('Response error %o', response)
-      throw new Error(`HTTP ${response.statusCode} Returned error: ${resObj.error}`)
+      debug('(%s) Response error %o', this.name, response)
+      throw new Error(`(${this.name}) HTTP ${response.statusCode} Returned error: ${resObj.error}`)
     }
     return resObj
   }
@@ -46,7 +52,7 @@ export class API {
    */
   _httpsRequest (options: {}, body?: string): Promise<*> {
     return new Promise((resolve, reject) => {
-      debug(`sending https request with body: %o and options:\n%O`, body, options)
+      debug('(%s) sending https request with body: %o and options:\n%O', this.name, body, options)
       let req : https.ClientRequest = https.request(options, (res: https.IncomingMessage) => {
         let rawData: string = ''
         res.on('data', (chunk) => { rawData += chunk })

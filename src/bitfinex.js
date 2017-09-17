@@ -32,6 +32,7 @@ export class Bitfinex extends API {
     this.tradingRate = tradingRate || (90 / 60) // separate for each method
     // TODO: add trade limit 1) per minute   2) separate per method
     this._tradingRateCount = []
+    this.name = 'bitfinex v1'
   }
 
   /**
