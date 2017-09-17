@@ -86,7 +86,7 @@ export class Bitfinex extends API {
    *
    * {@link https://bitfinex.readme.io/v1/reference#rest-auth-orders}
    */
-  async order (
+  order (
     symbol: string,
     amount: number,
     price: number,
@@ -94,7 +94,7 @@ export class Bitfinex extends API {
     type: 'market' | 'limit' | 'stop' | 'trailing-stop' | 'fill-or-kill' |
           'exchange market' | 'exchange limit' | 'exchange stop' |
           'exchange trailing-stop' | 'exchange fill-or-kill'
-  ): Promise<{}[]> {
+  ): Promise<{}> {
     return this._post('order/new', {
       symbol: symbol,
       amount: amount.toString(),
