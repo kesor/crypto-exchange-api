@@ -93,14 +93,14 @@ describe('Poloniex', () => {
     it('should return an error on bad http status codes', (done) => {
       scope.reply(404, '{ "error": "Not found" }')
       plx._get(query).catch((result) => {
-        t.equal('Error: (poloniex) HTTP 404 Returned error: Not found', result)
+        t.equal(result, 'Error: (poloniex) HTTP 404 Returned error: Not found')
         done()
       })
     })
     it('should return an error on errors during connection', (done) => {
       scope.replyWithError('request error')
       plx._get(query).catch((result) => {
-        t.equal('Error: request error', result)
+        t.equal(result, 'Error: request error')
         done()
       })
     })

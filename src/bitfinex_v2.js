@@ -150,7 +150,7 @@ export class BitfinexV2 extends API {
    * @param {string} path api path
    * @param {{[string]:string}} query api query parameters
    */
-  async _get (path: string, query: {} | { [string]: string | number | boolean }) {
+  async _get (path: string, query: {} | { [string]: string | number | boolean }): Promise<*> {
     const options = {
       method: 'GET',
       host: this.endpointHost,

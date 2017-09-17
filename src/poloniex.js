@@ -849,10 +849,9 @@ export class Poloniex extends API {
    * @param {object} query command and parameters to GET request from the API endpoint
    * @returns {Promise<object, Error>} API results or an error
    */
-  async _get (query: {} | {
-    command: string,
-    [string]: string
-  }) {
+  async _get (
+    query: {} | { command: string, [string]: string }
+  ): Promise<*> {
     let ts = new Date().getTime()
     if (!await this._checkRateLimit(ts, 6, this._publicRateCount)) { throw new Error('restricting requests to Poloniex to maximum of 6 per second') }
     let url: URL = new URL(PUBLIC_API)
