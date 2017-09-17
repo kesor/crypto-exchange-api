@@ -33,6 +33,10 @@ export class API {
     let resObj
     try {
       resObj = JSON.parse(response.data)
+      if (response.statusCode > 299) {
+        // TODO: implement parsing of response.data.message or response.data.error or whatever depending on exchange
+        throw new Error(response.data) // will be catched and re-thrown
+      }
       debug('(%s) Successful response %o', this.name, response)
     } catch (e) {
       debug('(%s) Response error %o', this.name, response)
