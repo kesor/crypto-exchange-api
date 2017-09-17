@@ -82,6 +82,30 @@ export class Bitfinex extends API {
   }
 
   /**
+   * Submit a new order.
+   *
+   * {@link https://bitfinex.readme.io/v1/reference#rest-auth-orders}
+   */
+  async order (
+    symbol: string,
+    amount: number,
+    price: number,
+    side: 'buy' | 'sell',
+    type: 'market' | 'limit' | 'stop' | 'trailing-stop' | 'fill-or-kill' |
+          'exchange market' | 'exchange limit' | 'exchange stop' |
+          'exchange trailing-stop' | 'exchange fill-or-kill'
+  ): Promise<{}[]> {
+    return this._post('order/new', {
+      symbol: symbol,
+      amount: amount.toString(),
+      price: price.toString(),
+      side: side,
+      type: type,
+      ocoorder: false
+    })
+  }
+
+  /**
    * Send a GET request to the API endpoint and return results.
    *
    * @private
@@ -117,7 +141,7 @@ export class Bitfinex extends API {
       throw new Error(`restricting requests to Bitfinex to maximum of ${this.tradingRate} per second`)
     }
     let nonce: number = (ts * 100 - 1) + this._tradingRateCount.filter((d: number) => ts === d).length
-    let body: string = JSON.stringify({ request: this.endpointPath + path, nonce: nonce.toString() }) // querystring.stringify(Object.assign({}, { nonce: nonce }, query))
+    let body: string = JSON.stringify(Object.assign({}, { request: this.endpointPath + path, nonce: nonce.toString() }, query))
     let payload: string = Buffer.from(body).toString('base64')
     const options = {
       method: 'POST',
