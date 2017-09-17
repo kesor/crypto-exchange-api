@@ -24,29 +24,33 @@ export class API {
     return rates.length <= limit
   }
 
+  // eslint-disable-next-line complexity
+  _resErrorMessage (response: { statusCode: number, data: string }): string {
+    let data
+    try {
+      data = JSON.parse(response.data)
+    } catch (e) {
+      data = { error: response.data }
+    }
+    if (response.statusCode > 299 || data.hasOwnProperty('error')) {
+      throw new Error(data.error || data.message || response.data)
+    }
+    return data
+  }
+
   /**
    * Parse https.request responses
    *
    * @private
    */
   _resJsonParse (response: { statusCode: number, data: string }) {
-    let resObj
     try {
-      resObj = JSON.parse(response.data)
-      if (response.statusCode > 299) {
-        // TODO: implement parsing of response.data.message or response.data.error or whatever depending on exchange
-        throw new Error(response.data) // will be catched and re-thrown
-      }
       debug('(%s) Successful response %o', this.name, response)
+      return this._resErrorMessage(response) // throw error, will be catched and re-thrown
     } catch (e) {
       debug('(%s) Response error %o', this.name, response)
-      throw new Error(`(${this.name}) HTTP ${response.statusCode} Returned error: ${response.data}`)
+      throw new Error(`(${this.name}) HTTP ${response.statusCode} Returned error: ${e.message}`)
     }
-    if (resObj.error) {
-      debug('(%s) Response error %o', this.name, response)
-      throw new Error(`(${this.name}) HTTP ${response.statusCode} Returned error: ${resObj.error}`)
-    }
-    return resObj
   }
 
   /**
