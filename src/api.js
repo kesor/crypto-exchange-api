@@ -25,8 +25,8 @@ export class API {
   }
 
   // eslint-disable-next-line complexity
-  _resErrorMessage (response: { statusCode: number, data: string }): string {
-    let data
+  _resErrorMessage (response: { statusCode: number, data: string }): {} {
+    let data: {}
     try {
       data = JSON.parse(response.data)
     } catch (e) {
